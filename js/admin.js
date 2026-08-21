@@ -757,7 +757,11 @@ class AdminDashboard {
   }
 }
 
-// Initialize Admin Dashboard on DOM load
-document.addEventListener("DOMContentLoaded", () => {
+// Initialize Admin Dashboard on DOM load or immediate execution
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    window.adminDashboard = new AdminDashboard();
+  });
+} else {
   window.adminDashboard = new AdminDashboard();
-});
+}

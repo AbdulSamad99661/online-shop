@@ -840,7 +840,11 @@ class StoreApp {
   }
 }
 
-// Initialize on DOM ready
-document.addEventListener("DOMContentLoaded", () => {
+// Initialize on DOM ready or immediate execution
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    window.storeApp = new StoreApp();
+  });
+} else {
   window.storeApp = new StoreApp();
-});
+}

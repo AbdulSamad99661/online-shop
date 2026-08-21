@@ -561,10 +561,18 @@ class StoreApp {
       try {
         btn.disabled = true;
         btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Signing In...`;
-        await authService.login(email, pass);
+        const user = await authService.login(email, pass);
         document.getElementById("modal-auth").classList.remove("active");
         document.body.style.overflow = "";
-        toast.success(`Welcome back, ${authService.currentUser.name}!`);
+
+        if (user && user.role === "admin") {
+          toast.success("Admin authenticated! Redirecting to Admin Dashboard...");
+          setTimeout(() => {
+            window.location.href = "admin.html";
+          }, 400);
+        } else {
+          toast.success(`Welcome back, ${user.name || 'User'}!`);
+        }
       } catch (err) {
         toast.error(err.message);
       } finally {

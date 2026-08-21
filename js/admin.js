@@ -34,21 +34,29 @@ class AdminDashboard {
   initAuthGuard() {
     this.bindGuardLoginForm();
 
-    authService.subscribe(async (user) => {
+    authService.subscribe((user) => {
       const guardEl = document.getElementById("admin-auth-guard");
       const contentEl = document.getElementById("admin-root-content");
 
       if (user && user.role === "admin") {
-        if (guardEl) guardEl.style.display = "none";
-        if (contentEl) contentEl.style.display = "flex";
+        if (guardEl) {
+          guardEl.style.setProperty("display", "none", "important");
+        }
+        if (contentEl) {
+          contentEl.style.setProperty("display", "flex", "important");
+        }
         
         const nameEl = document.getElementById("admin-user-name");
         if (nameEl) nameEl.textContent = user.name || "Admin";
-        await this.loadAllData();
+
+        // Async non-blocking data load
+        this.loadAllData().catch(err => console.error("Error loading dashboard data:", err));
       } else {
-        if (contentEl) contentEl.style.display = "none";
+        if (contentEl) {
+          contentEl.style.setProperty("display", "none", "important");
+        }
         if (guardEl) {
-          guardEl.style.display = "flex";
+          guardEl.style.setProperty("display", "flex", "important");
           this.renderAuthGuardUI(user);
         }
       }

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AuraStore &mdash; Premium E-Commerce & Storefront</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ==========================================
+       NAVIGATION BAR
+       ========================================== -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <!-- Brand Logo -->
+      <a href="index.html" class="brand-logo">
+        <i class="fa-solid fa-cube"></i>
+        <span>AuraStore</span>
+        <span class="brand-badge">PRO</span>
+      </a>
+
+      <!-- Navbar Instant Search -->
+      <div class="nav-search-wrapper">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="nav-search-input" class="nav-search-input" placeholder="Search 100+ premium products (e.g. Headphones, Shoes, Serum)...">
+      </div>
+
+      <!-- Navigation Actions -->
+      <div class="nav-actions">
+        <!-- Auth Profile / Login Container -->
+        <div id="nav-auth-container">
+          <!-- Dynamically populated by authService in store.js -->
+        </div>
+
+        <!-- Cart Trigger Button -->
+        <button id="nav-cart-trigger" class="nav-btn cart-trigger-btn">
+          <i class="fa-solid fa-bag-shopping"></i>
+          <span>Cart</span>
+          <span id="nav-cart-badge" class="cart-badge" style="display: none;">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================
+       HERO BANNER & PROMOTION SECTION
+       ========================================== -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <i class="fa-solid fa-bolt"></i>
+            <span>New Season Collection &bull; Up to 40% Off</span>
+          </div>
+          <h1 class="hero-title">
+            Discover Next-Gen Products <br>
+            <span>Crafted for Modern Living.</span>
+          </h1>
+          <p class="hero-description">
+            Explore over 100 curated tech essentials, designer fashion, wellness formulas, and artisan home decor backed by real-time Firebase syncing.
+          </p>
+          <div class="hero-buttons">
+            <a href="#products-section" class="btn-hero-primary">
+              <i class="fa-solid fa-cart-shopping"></i> Shop 100 Products
+            </a>
+            <a href="admin.html" class="btn-hero-secondary">
+              <i class="fa-solid fa-gauge-high"></i> Admin Dashboard
+            </a>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat-item">
+              <h4>100+</h4>
+              <p>Curated Items</p>
+            </div>
+            <div class="hero-stat-item">
+              <h4>8</h4>
+              <p>Top Categories</p>
+            </div>
+            <div class="hero-stat-item">
+              <h4>4.9 ★</h4>
+              <p>Customer Rating</p>
+            </div>
+            <div class="hero-stat-item">
+              <h4>24/7</h4>
+              <p>Fast Dispatch</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-banner-card">
+          <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80" alt="Featured Product">
+          <div class="hero-card-tag">Featured Audio</div>
+          <h3 class="hero-card-title">ProSound Noise-Cancelling Headphones</h3>
+          <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 0.75rem;">Premium 40-hour acoustic engineering with ultra-comfort memory cushions.</p>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:1.3rem; font-weight:800; color:#38bdf8;">$149.99</span>
+            <span style="font-size:0.85rem; color:#94a3b8; text-decoration:line-through;">$199.99</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       CATEGORY SHORTCUTS
+       ========================================== -->
+  <section class="categories-section">
+    <div class="container">
+      <div class="category-pills-scroll">
+        <button class="category-pill active" data-category="All">
+          <i class="fa-solid fa-grid-2"></i> All (100)
+        </button>
+        <button class="category-pill" data-category="Electronics">
+          <i class="fa-solid fa-laptop"></i> Electronics
+        </button>
+        <button class="category-pill" data-category="Fashion">
+          <i class="fa-solid fa-shirt"></i> Fashion & Apparel
+        </button>
+        <button class="category-pill" data-category="Home & Living">
+          <i class="fa-solid fa-couch"></i> Home & Living
+        </button>
+        <button class="category-pill" data-category="Beauty">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Beauty & Care
+        </button>
+        <button class="category-pill" data-category="Sports & Fitness">
+          <i class="fa-solid fa-dumbbell"></i> Sports & Fitness
+        </button>
+        <button class="category-pill" data-category="Footwear">
+          <i class="fa-solid fa-shoe-prints"></i> Footwear
+        </button>
+        <button class="category-pill" data-category="Watches & Accessories">
+          <i class="fa-solid fa-clock"></i> Watches & Accessories
+        </button>
+        <button class="category-pill" data-category="Books & Stationery">
+          <i class="fa-solid fa-book"></i> Books & Stationery
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       MAIN STOREFRONT & PRODUCTS CATALOG
+       ========================================== -->
+  <main id="products-section" class="container" style="padding-top: 1rem;">
+    <!-- Store Controls Toolbar -->
+    <div class="store-controls-bar">
+      <div class="store-controls-left">
+        <div id="products-count-display" class="results-count">
+          Showing <span>100</span> of <span>100</span> products
+        </div>
+      </div>
+
+      <div class="store-controls-right">
+        <!-- Sort Selector -->
+        <select id="store-sort-select" class="control-select">
+          <option value="default">Sort by: Featured</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="rating-desc">Top Rated (★)</option>
+          <option value="name-asc">Alphabetical: A - Z</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Products Grid Container -->
+    <div id="products-grid" class="products-grid">
+      <!-- Dynamically injected with 100 products by store.js -->
+    </div>
+  </main>
+
+  <!-- ==========================================
+       SHOPPING CART SLIDE-OUT DRAWER
+       ========================================== -->
+  <div id="cart-overlay" class="cart-overlay"></div>
+  <aside id="cart-drawer" class="cart-drawer">
+    <div class="cart-header">
+      <h3>
+        <i class="fa-solid fa-bag-shopping" style="color: var(--primary);"></i>
+        Your Shopping Bag
+      </h3>
+      <button id="btn-close-cart" class="cart-close-btn" aria-label="Close cart">&times;</button>
+    </div>
+
+    <div id="cart-drawer-items" class="cart-body">
+      <!-- Dynamically populated cart items -->
+    </div>
+
+    <div class="cart-footer">
+      <div class="cart-summary-row">
+        <span>Subtotal</span>
+        <strong id="cart-subtotal">$0.00</strong>
+      </div>
+      <div class="cart-summary-row">
+        <span>Estimated Tax (8%)</span>
+        <span id="cart-tax">$0.00</span>
+      </div>
+      <div class="cart-summary-row">
+        <span>Standard Shipping</span>
+        <span id="cart-shipping">FREE</span>
+      </div>
+      <div class="cart-summary-row cart-summary-total">
+        <span>Total</span>
+        <span id="cart-total" style="color: var(--primary);">$0.00</span>
+      </div>
+
+      <button id="btn-cart-checkout" class="btn-primary btn-checkout">
+        <i class="fa-solid fa-lock"></i> Proceed to Checkout
+      </button>
+    </div>
+  </aside>
+
+  <!-- ==========================================
+       MODAL: AUTHENTICATION (SIGN IN / SIGN UP)
+       ========================================== -->
+  <div id="modal-auth" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-auth-title">Welcome to AuraStore</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="auth-tabs">
+          <button id="tab-auth-login" class="auth-tab-btn active">Sign In</button>
+          <button id="tab-auth-signup" class="auth-tab-btn">Create Account</button>
+        </div>
+
+        <!-- Login Form -->
+        <form id="auth-login-form">
+          <div class="form-group">
+            <label for="login-email">Email Address</label>
+            <input type="email" id="login-email" class="form-control" placeholder="name@example.com" required>
+          </div>
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:0.75rem;">
+            Sign In
+          </button>
+        </form>
+
+        <!-- Signup Form -->
+        <form id="auth-signup-form" style="display:none;">
+          <div class="form-group">
+            <label for="signup-name">Full Name</label>
+            <input type="text" id="signup-name" class="form-control" placeholder="John Doe" required>
+          </div>
+          <div class="form-group">
+            <label for="signup-email">Email Address</label>
+            <input type="email" id="signup-email" class="form-control" placeholder="name@example.com" required>
+          </div>
+          <div class="form-group">
+            <label for="signup-password">Password (min 6 characters)</label>
+            <input type="password" id="signup-password" class="form-control" placeholder="••••••••" minlength="6" required>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:0.75rem;">
+            Create Account
+          </button>
+        </form>
+
+        <!-- Quick 1-Click Admin Box for User Prompt Testing -->
+        <div class="quick-admin-box">
+          <p><strong>Admin Test Login:</strong> Name: <code>Admin</code> | Password: <code>Admin</code></p>
+          <button id="btn-quick-admin-modal" class="btn-admin-demo">
+            <i class="fa-solid fa-bolt"></i> 1-Click Quick Admin Login
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: QUICK VIEW PRODUCT
+       ========================================== -->
+  <div id="modal-quick-view" class="modal-backdrop">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3>Product Details</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div id="quick-view-body" class="modal-body">
+        <!-- Dynamically injected -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: CHECKOUT & ORDER PLACEMENT
+       ========================================== -->
+  <div id="modal-checkout" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-credit-card" style="color:var(--primary); margin-right:0.4rem;"></i> Secure Checkout</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="checkout-form">
+          <div class="form-group">
+            <label for="checkout-name">Recipient Full Name</label>
+            <input type="text" id="checkout-name" class="form-control" placeholder="Jane Doe" required>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label for="checkout-email">Email Address</label>
+              <input type="email" id="checkout-email" class="form-control" placeholder="jane@example.com" required>
+            </div>
+            <div class="form-group">
+              <label for="checkout-phone">Phone Number</label>
+              <input type="tel" id="checkout-phone" class="form-control" placeholder="+1 (555) 000-0000" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="checkout-address">Shipping Address</label>
+            <input type="text" id="checkout-address" class="form-control" placeholder="123 Main St, City, State, Zip" required>
+          </div>
+          <div class="form-group">
+            <label for="checkout-payment">Payment Method</label>
+            <select id="checkout-payment" class="form-control">
+              <option value="Credit Card (Demo)">Credit / Debit Card (Instant Demo)</option>
+              <option value="Cash on Delivery">Cash on Delivery (COD)</option>
+              <option value="PayPal (Demo)">PayPal / Digital Wallet</option>
+            </select>
+          </div>
+
+          <!-- Items Overview in Checkout -->
+          <div style="background:var(--bg-surface-alt); padding:1rem; border-radius:var(--radius-md); margin-bottom:1.25rem;">
+            <h4 style="font-size:0.85rem; font-weight:700; margin-bottom:0.5rem; text-transform:uppercase; color:var(--text-muted);">Order Items:</h4>
+            <div id="checkout-items-summary"></div>
+            <div style="display:flex; justify-content:space-between; font-weight:800; font-size:1.1rem; border-top:1px dashed var(--border-color); padding-top:0.5rem; margin-top:0.5rem;">
+              <span>Total Amount:</span>
+              <span id="checkout-total-val" style="color:var(--primary);">$0.00</span>
+            </div>
+          </div>
+
+          <button type="submit" id="btn-submit-order" class="btn-primary" style="width:100%; justify-content:center; padding:0.85rem;">
+            <i class="fa-solid fa-lock"></i> Place Order Now
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: ORDER CONFIRMATION
+       ========================================== -->
+  <div id="modal-order-confirm" class="modal-backdrop">
+    <div class="modal-content">
+      <div id="order-confirm-body" class="modal-body">
+        <!-- Dynamically injected -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: CUSTOMER "MY ORDERS"
+       ========================================== -->
+  <div id="modal-my-orders" class="modal-backdrop">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-box-open" style="color:var(--primary); margin-right:0.4rem;"></i> My Order History</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div id="my-orders-body" class="modal-body">
+        <!-- Dynamically injected -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: FIREBASE CONFIG SETTINGS
+       ========================================== -->
+  <div id="modal-firebase-config" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-gear" style="color:var(--primary); margin-right:0.4rem;"></i> Firebase Configuration</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="firebase-status-indicator" style="margin-bottom:1rem; font-size:0.88rem;"></div>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.25rem;">
+          Paste your Firebase web credentials from the Firebase Console (Project Settings > General > Your Apps) to connect directly to Cloud Firestore.
+        </p>
+
+        <form id="firebase-config-form">
+          <div class="form-group">
+            <label>API Key</label>
+            <input type="text" id="cfg-api-key" class="form-control" required>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+            <div class="form-group">
+              <label>Auth Domain</label>
+              <input type="text" id="cfg-auth-domain" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Project ID</label>
+              <input type="text" id="cfg-project-id" class="form-control" required>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+            <div class="form-group">
+              <label>Storage Bucket</label>
+              <input type="text" id="cfg-storage-bucket" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Messaging Sender ID</label>
+              <input type="text" id="cfg-messaging-sender-id" class="form-control">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>App ID</label>
+            <input type="text" id="cfg-app-id" class="form-control">
+          </div>
+
+          <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+            <button type="submit" class="btn-primary" style="flex:1; justify-content:center;">
+              Save & Connect Firebase
+            </button>
+            <button type="button" id="btn-reset-firebase-cfg" class="nav-btn" style="border:1px solid var(--border-color);">
+              Reset Defaults
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       FOOTER
+       ========================================== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3><i class="fa-solid fa-cube" style="color:var(--primary);"></i> AuraStore</h3>
+          <p style="font-size:0.9rem; line-height:1.6; margin-bottom:1rem;">
+            A complete e-commerce solution with real-time Firebase Authentication, Cloud Firestore database, full CRUD admin panel, and 100 curated products.
+          </p>
+          <div style="display:flex; gap:0.75rem; font-size:1.1rem;">
+            <a href="#" style="color:#cbd5e1;"><i class="fa-brands fa-github"></i></a>
+            <a href="#" style="color:#cbd5e1;"><i class="fa-brands fa-twitter"></i></a>
+            <a href="#" style="color:#cbd5e1;"><i class="fa-brands fa-instagram"></i></a>
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>Categories</h4>
+          <ul class="footer-links">
+            <li><a href="#products-section">Electronics (15)</a></li>
+            <li><a href="#products-section">Fashion & Apparel (15)</a></li>
+            <li><a href="#products-section">Home & Living (15)</a></li>
+            <li><a href="#products-section">Beauty & Personal Care (15)</a></li>
+            <li><a href="#products-section">Sports & Fitness (15)</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Storefront Home</a></li>
+            <li><a href="admin.html">Admin Dashboard</a></li>
+            <li><a href="admin.html">Product Management</a></li>
+            <li><a href="admin.html">Order Tracker</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Admin Quick Access</h4>
+          <p style="font-size:0.85rem; margin-bottom:0.75rem;">Login to test product CRUD operations & order updates.</p>
+          <a href="admin.html" class="btn-primary" style="background:#312e81; font-size:0.85rem; padding:0.5rem 1rem;">
+            <i class="fa-solid fa-shield-halved"></i> Launch Admin Panel
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>&copy; 2026 AuraStore Platform. All rights reserved.</div>
+        <div>Built with HTML5, CSS3, ES6 Modules & Cloud Firestore.</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Storefront JavaScript Entry Point -->
+  <script type="module" src="js/store.js"></script>
+</body>
+</html>

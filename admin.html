@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard &mdash; AuraStore Management</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Main Store & Admin Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+
+  <!-- ==========================================
+       AUTH GUARD (SHOWN IF NOT LOGGED IN AS ADMIN)
+       ========================================== -->
+  <div id="admin-auth-guard" style="position:fixed; inset:0; z-index:9999; background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); display:flex; align-items:center; justify-content:center; padding:1.5rem;">
+    <div style="background:#ffffff; border-radius:16px; width:100%; max-width:440px; padding:2rem; box-shadow:0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+      <div id="guard-card-body">
+        <!-- Injected by js/admin.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MAIN ADMIN DASHBOARD ROOT CONTAINER
+       ========================================== -->
+  <div id="admin-root-content" style="display:none; width:100%;">
+    <!-- Admin Sidebar -->
+    <aside id="admin-sidebar" class="admin-sidebar">
+      <div class="sidebar-header">
+        <i class="fa-solid fa-cube"></i>
+        <span>AuraAdmin</span>
+        <span class="sidebar-badge">PRO</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#overview" class="sidebar-link active" data-tab="overview">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Overview</span>
+        </a>
+        <a href="#products" class="sidebar-link" data-tab="products">
+          <i class="fa-solid fa-boxes-stacked"></i>
+          <span>Products (CRUD)</span>
+        </a>
+        <a href="#orders" class="sidebar-link" data-tab="orders">
+          <i class="fa-solid fa-clipboard-list"></i>
+          <span>Orders Management</span>
+        </a>
+        <a href="#customers" class="sidebar-link" data-tab="customers">
+          <i class="fa-solid fa-users"></i>
+          <span>Registered Users</span>
+        </a>
+        <a href="#firebase" class="sidebar-link" data-tab="firebase">
+          <i class="fa-solid fa-fire"></i>
+          <span>Firebase Setup</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="index.html" class="btn-sidebar-store">
+          <i class="fa-solid fa-store"></i>
+          <span>Open Storefront</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- Admin Main Column -->
+    <div class="admin-main">
+      <!-- Top Header -->
+      <header class="admin-header">
+        <div class="admin-header-left">
+          <button id="btn-toggle-sidebar" class="mobile-sidebar-toggle" aria-label="Toggle Menu">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <h2 id="admin-header-title" class="admin-page-title">Dashboard Overview</h2>
+        </div>
+
+        <div class="admin-header-right">
+          <div class="admin-user-tag">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span id="admin-user-name">Admin</span>
+          </div>
+          <button id="btn-admin-logout" class="btn-icon-action btn-icon-danger" title="Sign Out">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Tabbed Content Area -->
+      <main class="admin-content">
+
+        <!-- ==========================================
+             TAB 1: DASHBOARD OVERVIEW
+             ========================================== -->
+        <section id="tab-pane-overview" class="tab-pane active">
+          <!-- KPI Summary Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-info">
+                <h4>Total Revenue</h4>
+                <div id="kpi-revenue" class="kpi-value">$0.00</div>
+              </div>
+              <div class="kpi-icon-wrap kpi-primary">
+                <i class="fa-solid fa-dollar-sign"></i>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-info">
+                <h4>Total Orders</h4>
+                <div id="kpi-orders" class="kpi-value">0</div>
+              </div>
+              <div class="kpi-icon-wrap kpi-info">
+                <i class="fa-solid fa-cart-shopping"></i>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-info">
+                <h4>Total Products</h4>
+                <div id="kpi-products" class="kpi-value">100</div>
+              </div>
+              <div class="kpi-icon-wrap kpi-success">
+                <i class="fa-solid fa-boxes-stacked"></i>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-info">
+                <h4>Active Customers</h4>
+                <div id="kpi-customers" class="kpi-value">0</div>
+              </div>
+              <div class="kpi-icon-wrap kpi-warning">
+                <i class="fa-solid fa-users"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions Bar -->
+          <div class="admin-panel" style="padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h4 style="font-weight: 700;">Firestore Database Status</h4>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">Sync 100 products dataset to Cloud Firestore with a single click.</p>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+              <button id="btn-seed-products-overview" class="btn-admin-seed">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Seed 100 Products to Database
+              </button>
+            </div>
+          </div>
+
+          <!-- Recent Orders Panel -->
+          <div class="admin-panel">
+            <div class="panel-header">
+              <h3>Recent Customer Orders</h3>
+              <a href="#orders" class="nav-btn sidebar-link" data-tab="orders" style="font-size: 0.85rem;">
+                View All Orders &rarr;
+              </a>
+            </div>
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="table-recent-orders-body">
+                  <!-- Dynamically loaded -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 2: PRODUCTS MANAGEMENT (CRUD)
+             ========================================== -->
+        <section id="tab-pane-products" class="tab-pane">
+          <div class="admin-panel">
+            <div class="panel-header">
+              <div>
+                <h3>Product Catalog</h3>
+                <span id="admin-products-count" style="font-size: 0.82rem; color: var(--text-muted);">100 products</span>
+              </div>
+              <div class="panel-actions">
+                <div style="position: relative;">
+                  <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
+                  <input type="text" id="admin-product-search" class="admin-search-input" placeholder="Search title or ID...">
+                </div>
+
+                <select id="admin-product-category-filter" class="control-select" style="font-size: 0.85rem;">
+                  <option value="All">All Categories</option>
+                  <option value="Electronics">Electronics</option>
+                  <option value="Fashion">Fashion</option>
+                  <option value="Home & Living">Home & Living</option>
+                  <option value="Beauty">Beauty</option>
+                  <option value="Sports & Fitness">Sports & Fitness</option>
+                  <option value="Footwear">Footwear</option>
+                  <option value="Watches & Accessories">Watches & Accessories</option>
+                  <option value="Books & Stationery">Books & Stationery</option>
+                </select>
+
+                <button id="btn-seed-100-products" class="btn-admin-seed" title="Populate Firestore with 100 products">
+                  <i class="fa-solid fa-cloud-arrow-up"></i> Seed 100 Products
+                </button>
+
+                <button id="btn-admin-add-product" class="btn-admin-primary">
+                  <i class="fa-solid fa-plus"></i> Add Product
+                </button>
+              </div>
+            </div>
+
+            <!-- Products Data Table -->
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Image</th>
+                    <th>Product Title & ID</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Rating</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-products-table-body">
+                  <!-- Dynamically populated by js/admin.js -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            <div id="admin-products-pagination"></div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 3: ORDERS MANAGEMENT
+             ========================================== -->
+        <section id="tab-pane-orders" class="tab-pane">
+          <div class="admin-panel">
+            <div class="panel-header">
+              <h3>Customer Orders</h3>
+              <div class="panel-actions">
+                <select id="admin-order-status-filter" class="control-select" style="font-size: 0.85rem;">
+                  <option value="All">Filter by: All Statuses</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Processing">Processing</option>
+                  <option value="Shipped">Shipped</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Order ID</th>
+                    <th>Customer Name & Email</th>
+                    <th>Purchased Items</th>
+                    <th>Total Price</th>
+                    <th>Update Status</th>
+                    <th>Placed Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-orders-table-body">
+                  <!-- Dynamically loaded -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 4: REGISTERED CUSTOMERS
+             ========================================== -->
+        <section id="tab-pane-customers" class="tab-pane">
+          <div class="admin-panel">
+            <div class="panel-header">
+              <h3>Registered Users & Customers</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Customer Name</th>
+                    <th>Email Address</th>
+                    <th>Role</th>
+                    <th>User ID (UID)</th>
+                    <th>Registered Date</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-users-table-body">
+                  <!-- Dynamically loaded -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================
+             TAB 5: FIREBASE SETUP & CONFIG
+             ========================================== -->
+        <section id="tab-pane-firebase" class="tab-pane">
+          <div class="admin-panel" style="padding: 2rem;">
+            <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem;">Firebase Connection & Cloud Firestore Settings</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+              Connect this web app to your Firebase project by entering your Web SDK config below. Once saved, all products, orders, and authentication will sync in real time with Cloud Firestore!
+            </p>
+
+            <div id="admin-fb-status-box" style="margin-bottom: 1.5rem;"></div>
+
+            <form id="admin-firebase-form" style="max-width: 650px;">
+              <div class="form-group">
+                <label>API Key (apiKey)</label>
+                <input type="text" id="admin-cfg-api-key" class="form-control" required>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div class="form-group">
+                  <label>Auth Domain (authDomain)</label>
+                  <input type="text" id="admin-cfg-auth-domain" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label>Project ID (projectId)</label>
+                  <input type="text" id="admin-cfg-project-id" class="form-control" required>
+                </div>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div class="form-group">
+                  <label>Storage Bucket (storageBucket)</label>
+                  <input type="text" id="admin-cfg-storage-bucket" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>Messaging Sender ID (messagingSenderId)</label>
+                  <input type="text" id="admin-cfg-messaging-sender-id" class="form-control">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>App ID (appId)</label>
+                <input type="text" id="admin-cfg-app-id" class="form-control">
+              </div>
+
+              <div style="display:flex; gap:1rem; margin-top:1.5rem;">
+                <button type="submit" class="btn-admin-primary" style="padding:0.75rem 1.5rem;">
+                  <i class="fa-solid fa-floppy-disk"></i> Save & Apply Configuration
+                </button>
+                <button type="button" id="btn-admin-reset-fb" class="nav-btn" style="border:1px solid var(--admin-border);">
+                  Reset to Sandbox Defaults
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: ADD / EDIT PRODUCT
+       ========================================== -->
+  <div id="modal-admin-product" class="modal-backdrop">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 id="modal-product-title">Add New Product</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-product">
+          <div class="form-group">
+            <label for="prod-title">Product Title</label>
+            <input type="text" id="prod-title" class="form-control" placeholder="e.g. Sony WH-1000XM5 Headphones" required>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label for="prod-category">Category</label>
+              <select id="prod-category" class="form-control" required>
+                <option value="Electronics">Electronics</option>
+                <option value="Fashion">Fashion</option>
+                <option value="Home & Living">Home & Living</option>
+                <option value="Beauty">Beauty</option>
+                <option value="Sports & Fitness">Sports & Fitness</option>
+                <option value="Footwear">Footwear</option>
+                <option value="Watches & Accessories">Watches & Accessories</option>
+                <option value="Books & Stationery">Books & Stationery</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="prod-price">Selling Price ($)</label>
+              <input type="number" step="0.01" id="prod-price" class="form-control" placeholder="49.99" required>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+            <div class="form-group">
+              <label for="prod-original-price">Original Price ($) (Optional)</label>
+              <input type="number" step="0.01" id="prod-original-price" class="form-control" placeholder="69.99">
+            </div>
+            <div class="form-group">
+              <label for="prod-stock">Stock Quantity</label>
+              <input type="number" id="prod-stock" class="form-control" value="25" required>
+            </div>
+            <div class="form-group">
+              <label for="prod-rating">Rating (1.0 - 5.0)</label>
+              <input type="number" step="0.1" min="1.0" max="5.0" id="prod-rating" class="form-control" value="4.8">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="prod-image">Image URL (Unsplash or direct image link)</label>
+            <input type="url" id="prod-image" class="form-control" placeholder="https://images.unsplash.com/photo-..." required>
+          </div>
+
+          <div class="form-group">
+            <label for="prod-description">Product Description</label>
+            <textarea id="prod-description" class="form-control" rows="3" placeholder="Provide detailed description..." required></textarea>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
+            <button type="button" class="nav-btn modal-close" style="border:1px solid var(--admin-border);">Cancel</button>
+            <button type="submit" class="btn-admin-primary" style="padding:0.7rem 1.5rem;">Save Product</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL: ORDER DETAILS (ADMIN VIEW)
+       ========================================== -->
+  <div id="modal-admin-order-details" class="modal-backdrop">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3>Customer Order Summary</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div id="admin-order-details-body" class="modal-body">
+        <!-- Dynamically injected -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin JavaScript Entry Point -->
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

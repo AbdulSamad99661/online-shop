@@ -91,10 +91,6 @@ class AdminDashboard {
           </button>
         </form>
 
-        <button id="btn-guard-admin-login" class="btn-admin-demo" style="width:100%; justify-content:center; padding:0.7rem; margin-bottom:0.75rem;">
-          <i class="fa-solid fa-bolt"></i> 1-Click Instant Admin Login
-        </button>
-
         <a href="index.html" class="nav-btn" style="width:100%; justify-content:center; border:1px solid var(--admin-border); padding:0.6rem; font-size:0.85rem;">
           <i class="fa-solid fa-arrow-left"></i> Back to Storefront
         </a>
@@ -108,15 +104,6 @@ class AdminDashboard {
       try {
         await authService.login(email, pass);
         toast.success("Admin authenticated successfully!");
-      } catch (err) {
-        toast.error(err.message);
-      }
-    });
-
-    document.getElementById("btn-guard-admin-login")?.addEventListener("click", async () => {
-      try {
-        await authService.quickAdminLogin();
-        toast.success("Logged in as Admin!");
       } catch (err) {
         toast.error(err.message);
       }

@@ -62,14 +62,9 @@ class StoreApp {
           </button>
           <div id="user-dropdown-menu" class="dropdown-menu">
             <div class="dropdown-header">
-              <div class="user-name">${this.currentUser.name} ${isAdmin ? '<span class="brand-badge" style="background:#4f46e5;color:white;">Admin</span>' : ''}</div>
+              <div class="user-name">${this.currentUser.name}</div>
               <div class="user-email">${this.currentUser.email}</div>
             </div>
-            ${isAdmin ? `
-              <a href="admin.html" class="dropdown-item" style="color: #4f46e5; font-weight: 700;">
-                <i class="fa-solid fa-gauge-high"></i> Admin Dashboard
-              </a>
-            ` : ''}
             <button id="btn-view-my-orders" class="dropdown-item">
               <i class="fa-solid fa-box-open"></i> My Orders
             </button>

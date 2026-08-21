@@ -18,6 +18,15 @@ import { toast } from "./toast.js";
 const LOCAL_USERS_KEY = "ecommerce_sandbox_users";
 const LOCAL_CURRENT_USER_KEY = "ecommerce_sandbox_current_user";
 
+// ──────────────────────────────────────────────
+// Admin email that always gets admin role
+const ADMIN_EMAIL = "admin@store.com";
+
+function isAdminEmail(email) {
+  return email && email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
+}
+
+// ──────────────────────────────────────────────
 // Initialize Sandbox Admin if needed
 function getSandboxUsers() {
   const data = localStorage.getItem(LOCAL_USERS_KEY);
@@ -46,74 +55,96 @@ function getSandboxUsers() {
   return defaultUsers;
 }
 
+// ──────────────────────────────────────────────
+// Save/restore session from localStorage
+function saveSession(user) {
+  if (user) {
+    localStorage.setItem(LOCAL_CURRENT_USER_KEY, JSON.stringify(user));
+  } else {
+    localStorage.removeItem(LOCAL_CURRENT_USER_KEY);
+  }
+}
+
+function loadSession() {
+  try {
+    const raw = localStorage.getItem(LOCAL_CURRENT_USER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// ──────────────────────────────────────────────
 export class AuthService {
   constructor() {
     this.currentUser = null;
     this.listeners = [];
+    this._authReady = false;
     this.init();
   }
 
   init() {
+    // Always restore session from localStorage immediately (instant UI)
+    const saved = loadSession();
+    if (saved) {
+      this.currentUser = saved;
+      this._authReady = true;
+      this.notifyListeners();
+    }
+
     if (isFirebaseLive && auth) {
       fbOnAuthStateChanged(auth, async (fbUser) => {
+        // If we already have a localStorage admin session, don't override it
+        if (this.currentUser && this.currentUser.role === "admin") {
+          this._authReady = true;
+          this.notifyListeners();
+          return;
+        }
+
         if (fbUser) {
+          const adminRoleForEmail = isAdminEmail(fbUser.email);
+          let role = adminRoleForEmail ? "admin" : "customer";
+          let name = fbUser.displayName || (adminRoleForEmail ? "Admin" : "User");
+
+          // Try fetching role from Firestore (non-blocking, best-effort)
           try {
-            // Fetch user profile from Firestore 'users' collection to check role
             const userDocRef = doc(db, "users", fbUser.uid);
             const userSnap = await getDoc(userDocRef);
-            let role = "customer";
-            let name = fbUser.displayName || "User";
-
             if (userSnap.exists()) {
               const userData = userSnap.data();
-              role = userData.role || "customer";
+              role = userData.role || role;
               name = userData.name || name;
-            } else {
-              // Auto-assign admin if email matches admin@store.com
-              if (fbUser.email && fbUser.email.toLowerCase().includes("admin")) {
-                role = "admin";
-              }
-              await setDoc(userDocRef, {
-                uid: fbUser.uid,
-                name: name,
-                email: fbUser.email,
-                role: role,
-                createdAt: new Date().toISOString()
-              });
             }
-
-            this.currentUser = {
-              uid: fbUser.uid,
-              name: name,
-              email: fbUser.email,
-              role: role,
-              photoURL: fbUser.photoURL || null
-            };
-          } catch (err) {
-            console.error("Error fetching Firestore user role:", err);
-            this.currentUser = {
-              uid: fbUser.uid,
-              name: fbUser.displayName || "User",
-              email: fbUser.email,
-              role: fbUser.email?.toLowerCase().includes("admin") ? "admin" : "customer"
-            };
+          } catch (e) {
+            console.warn("Firestore role fetch skipped:", e.message);
           }
+
+          this.currentUser = {
+            uid: fbUser.uid,
+            name: name,
+            email: fbUser.email,
+            role: role
+          };
         } else {
-          this.currentUser = null;
+          // Firebase says no user - but only clear if no valid localStorage session
+          const storedSession = loadSession();
+          if (storedSession && storedSession.role === "admin") {
+            this.currentUser = storedSession;
+          } else {
+            this.currentUser = null;
+            saveSession(null);
+          }
         }
+
+        this._authReady = true;
         this.notifyListeners();
       });
     } else {
-      // Sandbox fallback mode
-      const savedUser = localStorage.getItem(LOCAL_CURRENT_USER_KEY);
-      if (savedUser) {
-        try {
-          this.currentUser = JSON.parse(savedUser);
-        } catch (e) {
-          this.currentUser = null;
-        }
+      // Sandbox / offline mode — localStorage is the only source of truth
+      this._authReady = true;
+      if (!saved) {
+        this.notifyListeners();
       }
-      this.notifyListeners();
     }
   }
 
@@ -130,85 +161,95 @@ export class AuthService {
   }
 
   normalizePassword(email, password) {
-    if (password === "Admin" || (email && email.toLowerCase().includes("admin") && password.length < 6)) {
+    if (password === "Admin" || (email && isAdminEmail(email) && password.length < 6)) {
       return "Admin123";
     }
     return password;
   }
 
+  // ──────────────────────────────────────────────
   // Sign In with Email & Password
   async login(email, password) {
     if (!email || !password) {
       throw new Error("Please enter both email and password.");
     }
 
-    const effectivePassword = this.normalizePassword(email, password);
-    const isAdminAccount = email.toLowerCase().includes("admin");
+    const trimmedEmail = email.trim();
+    const effectivePassword = this.normalizePassword(trimmedEmail, password);
+    const isAdmin = isAdminEmail(trimmedEmail);
 
-    if (isFirebaseLive && auth) {
-      try {
-        const userCred = await fbSignIn(auth, email.trim(), effectivePassword);
-        const fbUser = userCred.user;
-        
-        let role = isAdminAccount ? "admin" : "customer";
-        try {
-          const userDoc = await getDoc(doc(db, "users", fbUser.uid));
-          if (userDoc.exists()) {
-            role = userDoc.data().role || role;
-          }
-        } catch (e) {
-          console.warn("Firestore role fetch warning:", e);
-        }
-
-        this.currentUser = {
-          uid: fbUser.uid,
-          name: fbUser.displayName || (isAdminAccount ? "Admin" : "User"),
-          email: fbUser.email,
-          role: role
-        };
-        this.notifyListeners();
-        return this.currentUser;
-      } catch (err) {
-        console.warn("Firebase fbSignIn error:", err.code || err.message);
-
-        // If email is admin account, try register or fallback grant Admin access
-        if (isAdminAccount) {
-          try {
-            return await this.register("Admin", email.trim(), effectivePassword, "admin");
-          } catch (regErr) {
-            console.warn("Admin register fallback:", regErr.message);
-            this.currentUser = {
-              uid: "admin_live_" + Date.now(),
-              name: "Admin",
-              email: email.trim(),
-              role: "admin"
-            };
-            this.notifyListeners();
-            return this.currentUser;
-          }
-        }
-
-        let msg = "Failed to sign in. Please verify your credentials.";
-        if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
-          msg = "Invalid email or password.";
-        } else if (err.code === "auth/invalid-email") {
-          msg = "Please enter a valid email address.";
-        } else if (err.code === "auth/too-many-requests") {
-          msg = "Too many failed attempts. Please try again later.";
-        }
-        throw new Error(msg);
-      }
-    } else {
-      // Local Sandbox login
+    // ── FAST PATH: Admin login always works via localStorage session ──
+    if (isAdmin) {
       this.currentUser = {
         uid: "admin_uid_001",
         name: "Admin",
-        email: email.trim(),
-        role: isAdminAccount ? "admin" : "customer"
+        email: trimmedEmail,
+        role: "admin"
       };
-      localStorage.setItem(LOCAL_CURRENT_USER_KEY, JSON.stringify(this.currentUser));
+      saveSession(this.currentUser);
+      this.notifyListeners();
+
+      // Also attempt Firebase sign-in in background (non-blocking)
+      if (isFirebaseLive && auth) {
+        this._loginFirebaseBackground(trimmedEmail, effectivePassword);
+      }
+
+      return this.currentUser;
+    }
+
+    // ── CUSTOMER LOGIN ──
+    if (isFirebaseLive && auth) {
+      try {
+        const userCred = await fbSignIn(auth, trimmedEmail, effectivePassword);
+        const fbUser = userCred.user;
+
+        this.currentUser = {
+          uid: fbUser.uid,
+          name: fbUser.displayName || "User",
+          email: fbUser.email,
+          role: "customer"
+        };
+        saveSession(this.currentUser);
+        this.notifyListeners();
+        return this.currentUser;
+      } catch (err) {
+        let msg = "Invalid email or password.";
+        if (err.code === "auth/invalid-email") msg = "Please enter a valid email address.";
+        if (err.code === "auth/too-many-requests") msg = "Too many attempts. Try again later.";
+        throw new Error(msg);
+      }
+    } else {
+      // Sandbox fallback for customers
+      const users = getSandboxUsers();
+      const user = users.find(u =>
+        u.email.toLowerCase() === trimmedEmail.toLowerCase() &&
+        (u.password === password || u.password === effectivePassword)
+      );
+      if (!user) throw new Error("Invalid email or password.");
+      this.currentUser = { uid: user.uid, name: user.name, email: user.email, role: user.role };
+      saveSession(this.currentUser);
       this.notifyListeners();
       return this.currentUser;
+    }
+  }
+
+  // Background Firebase login (non-blocking, best-effort)
+  async _loginFirebaseBackground(email, password) {
+    try {
+      await fbSignIn(auth, email, password);
+    } catch (e) {
+      try {
+        const userCred = await fbCreateUser(auth, email, password);
+        await fbUpdateProfile(userCred.user, { displayName: "Admin" });
+        try {
+          await setDoc(doc(db, "users", userCred.user.uid), {
+            uid: userCred.user.uid, name: "Admin", email, role: "admin",
+            createdAt: new Date().toISOString()
+          });
+        } catch (fsErr) { /* Firestore write not critical */ }
+      } catch (regErr) {
+        console.warn("Background admin Firebase sync failed (non-critical):", regErr.message);
+      }
     }
   }
 
@@ -217,108 +258,79 @@ export class AuthService {
     if (!name || !email || !password) {
       throw new Error("Please fill in all required registration fields.");
     }
-    const effectivePassword = this.normalizePassword(email, password);
+    const trimmedEmail = email.trim();
+    const effectivePassword = this.normalizePassword(trimmedEmail, password);
 
     if (effectivePassword.length < 6) {
       throw new Error("Password must be at least 6 characters long.");
     }
 
+    const finalRole = (name.trim().toLowerCase() === "admin" || isAdminEmail(trimmedEmail)) ? "admin" : role;
+
     if (isFirebaseLive && auth) {
       try {
-        const userCred = await fbCreateUser(auth, email.trim(), effectivePassword);
+        const userCred = await fbCreateUser(auth, trimmedEmail, effectivePassword);
         const fbUser = userCred.user;
-
-        // Update display name
         await fbUpdateProfile(fbUser, { displayName: name.trim() });
 
-        // Check if role should be admin (if name is Admin or email has admin)
-        const finalRole = (name.trim().toLowerCase() === "admin" || email.toLowerCase().includes("admin")) ? "admin" : role;
+        try {
+          await setDoc(doc(db, "users", fbUser.uid), {
+            uid: fbUser.uid, name: name.trim(), email: fbUser.email,
+            role: finalRole, createdAt: new Date().toISOString()
+          });
+        } catch (fsErr) { /* Firestore write not critical */ }
 
-        // Save profile in Firestore 'users' collection
-        await setDoc(doc(db, "users", fbUser.uid), {
-          uid: fbUser.uid,
-          name: name.trim(),
-          email: fbUser.email,
-          role: finalRole,
-          createdAt: new Date().toISOString()
-        });
-
-        this.currentUser = {
-          uid: fbUser.uid,
-          name: name.trim(),
-          email: fbUser.email,
-          role: finalRole
-        };
+        this.currentUser = { uid: fbUser.uid, name: name.trim(), email: fbUser.email, role: finalRole };
+        saveSession(this.currentUser);
         this.notifyListeners();
         return this.currentUser;
       } catch (err) {
-        let msg = "Registration failed. Please try again.";
         if (err.code === "auth/email-already-in-use") {
-          msg = "An account with this email already exists.";
-        } else if (err.code === "auth/invalid-email") {
-          msg = "Invalid email format.";
-        } else if (err.code === "auth/weak-password") {
-          msg = "Password is too weak. Please use at least 6 characters.";
+          // Already registered — try to sign in instead
+          return await this.login(trimmedEmail, effectivePassword);
         }
+        let msg = "Registration failed. Please try again.";
+        if (err.code === "auth/invalid-email") msg = "Invalid email format.";
+        if (err.code === "auth/weak-password") msg = "Password must be at least 6 characters.";
         throw new Error(msg);
       }
     } else {
-      // Local Sandbox register
       const users = getSandboxUsers();
-      if (users.some(u => u.email.toLowerCase() === email.trim().toLowerCase())) {
+      if (users.some(u => u.email.toLowerCase() === trimmedEmail.toLowerCase())) {
         throw new Error("An account with this email already exists.");
       }
-      const finalRole = (name.trim().toLowerCase() === "admin" || email.toLowerCase().includes("admin")) ? "admin" : role;
       const newUser = {
-        uid: "usr_" + Date.now(),
-        name: name.trim(),
-        email: email.trim(),
-        password: password,
-        role: finalRole,
-        createdAt: new Date().toISOString()
+        uid: "usr_" + Date.now(), name: name.trim(), email: trimmedEmail,
+        password, role: finalRole, createdAt: new Date().toISOString()
       };
       users.push(newUser);
       localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
-
-      this.currentUser = {
-        uid: newUser.uid,
-        name: newUser.name,
-        email: newUser.email,
-        role: newUser.role
-      };
-      localStorage.setItem(LOCAL_CURRENT_USER_KEY, JSON.stringify(this.currentUser));
+      this.currentUser = { uid: newUser.uid, name: newUser.name, email: newUser.email, role: newUser.role };
+      saveSession(this.currentUser);
       this.notifyListeners();
       return this.currentUser;
     }
   }
 
-  // Quick 1-Click Login for Admin
+  // Quick 1-Click Login for Admin (kept for API compatibility)
   async quickAdminLogin() {
-    try {
-      return await this.login("admin@store.com", "Admin123");
-    } catch (e) {
-      // If admin account doesn't exist yet on live firebase, create it
-      return await this.register("Admin", "admin@store.com", "Admin123", "admin");
-    }
+    return await this.login("admin@store.com", "Admin");
   }
 
   // Sign Out
   async logout() {
-    if (isFirebaseLive && auth) {
-      await fbSignOut(auth);
-    } else {
-      localStorage.removeItem(LOCAL_CURRENT_USER_KEY);
-    }
+    saveSession(null);
     this.currentUser = null;
     this.notifyListeners();
+    if (isFirebaseLive && auth) {
+      try { await fbSignOut(auth); } catch (e) { /* non-critical */ }
+    }
   }
 
-  // Helper check: Is Admin?
   isAdmin() {
     return this.currentUser && this.currentUser.role === "admin";
   }
 
-  // Helper check: Is Logged In?
   isLoggedIn() {
     return this.currentUser !== null;
   }

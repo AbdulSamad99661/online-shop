@@ -32,6 +32,8 @@ class AdminDashboard {
   }
 
   initAuthGuard() {
+    this.bindGuardLoginForm();
+
     authService.subscribe(async (user) => {
       const guardEl = document.getElementById("admin-auth-guard");
       const contentEl = document.getElementById("admin-root-content");
@@ -40,13 +42,48 @@ class AdminDashboard {
         if (guardEl) guardEl.style.display = "none";
         if (contentEl) contentEl.style.display = "flex";
         
-        document.getElementById("admin-user-name").textContent = user.name || "Admin";
+        const nameEl = document.getElementById("admin-user-name");
+        if (nameEl) nameEl.textContent = user.name || "Admin";
         await this.loadAllData();
       } else {
         if (contentEl) contentEl.style.display = "none";
         if (guardEl) {
           guardEl.style.display = "flex";
           this.renderAuthGuardUI(user);
+        }
+      }
+    });
+  }
+
+  bindGuardLoginForm() {
+    const form = document.getElementById("guard-login-form");
+    if (!form || form.dataset.bound) return;
+    form.dataset.bound = "true";
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("guard-email")?.value;
+      const pass = document.getElementById("guard-password")?.value;
+      const submitBtn = form.querySelector("button[type='submit']");
+
+      if (!email || !pass) {
+        toast.error("Please enter email and password.");
+        return;
+      }
+
+      try {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...`;
+        }
+        await authService.login(email.trim(), pass);
+        toast.success("Admin authenticated successfully!");
+      } catch (err) {
+        toast.error(err.message);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> Sign In as Admin`;
         }
       }
     });
@@ -97,17 +134,8 @@ class AdminDashboard {
       </div>
     `;
 
-    document.getElementById("guard-login-form")?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("guard-email").value;
-      const pass = document.getElementById("guard-password").value;
-      try {
-        await authService.login(email, pass);
-        toast.success("Admin authenticated successfully!");
-      } catch (err) {
-        toast.error(err.message);
-      }
-    });
+    delete document.getElementById("guard-login-form")?.dataset.bound;
+    this.bindGuardLoginForm();
   }
 
   // ==========================================

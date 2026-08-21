@@ -159,6 +159,7 @@ export class AuthService {
           email: fbUser.email,
           role: role
         };
+        this.notifyListeners();
         return this.currentUser;
       } catch (err) {
         // If user doesn't exist yet on live firebase and tries admin login, auto-register them as Admin
@@ -238,6 +239,7 @@ export class AuthService {
           email: fbUser.email,
           role: finalRole
         };
+        this.notifyListeners();
         return this.currentUser;
       } catch (err) {
         let msg = "Registration failed. Please try again.";

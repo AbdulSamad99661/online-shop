@@ -32,118 +32,64 @@ class AdminDashboard {
   }
 
   initAuthGuard() {
-    this.bindGuardLoginForm();
-
-    authService.subscribe((user) => {
-      const guardEl = document.getElementById("admin-auth-guard");
-      const contentEl = document.getElementById("admin-root-content");
-
-      if (user && user.role === "admin") {
-        if (guardEl) {
-          guardEl.style.setProperty("display", "none", "important");
-        }
-        if (contentEl) {
-          contentEl.style.setProperty("display", "flex", "important");
-        }
-        
-        const nameEl = document.getElementById("admin-user-name");
-        if (nameEl) nameEl.textContent = user.name || "Admin";
-
-        // Async non-blocking data load
-        this.loadAllData().catch(err => console.error("Error loading dashboard data:", err));
-      } else {
-        if (contentEl) {
-          contentEl.style.setProperty("display", "none", "important");
-        }
-        if (guardEl) {
-          guardEl.style.setProperty("display", "flex", "important");
-          this.renderAuthGuardUI(user);
-        }
-      }
-    });
-  }
-
-  bindGuardLoginForm() {
+    // Bind the static form in HTML once - no re-rendering needed
     const form = document.getElementById("guard-login-form");
-    if (!form || form.dataset.bound) return;
-    form.dataset.bound = "true";
+    if (form) {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("guard-email")?.value?.trim();
+        const pass = document.getElementById("guard-password")?.value;
+        const submitBtn = form.querySelector("button[type='submit']");
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("guard-email")?.value;
-      const pass = document.getElementById("guard-password")?.value;
-      const submitBtn = form.querySelector("button[type='submit']");
-
-      if (!email || !pass) {
-        toast.error("Please enter email and password.");
-        return;
-      }
-
-      try {
-        if (submitBtn) {
-          submitBtn.disabled = true;
-          submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...`;
+        if (!email || !pass) {
+          toast.error("Please enter email and password.");
+          return;
         }
-        await authService.login(email.trim(), pass);
-        toast.success("Admin authenticated successfully!");
-      } catch (err) {
-        toast.error(err.message);
-      } finally {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> Sign In as Admin`;
+
+        try {
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...`;
+          }
+          const user = await authService.login(email, pass);
+          // Directly show dashboard without waiting for subscriber
+          this._showDashboard(user);
+        } catch (err) {
+          toast.error(err.message || "Login failed.");
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> Sign In as Admin`;
+          }
         }
-      }
-    });
-  }
-
-  renderAuthGuardUI(user) {
-    const guardBody = document.getElementById("guard-card-body");
-    if (!guardBody) return;
-
-    let userStatusNotice = "";
-    if (user && user.role !== "admin") {
-      userStatusNotice = `
-        <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:0.75rem; margin-bottom:1rem; text-align:left; font-size:0.85rem; color:#991b1b;">
-          <i class="fa-solid fa-triangle-exclamation"></i> Signed in as Customer (<strong>${user.email}</strong>). Enter Admin credentials below to access Admin Dashboard:
-        </div>
-      `;
+      });
     }
 
-    guardBody.innerHTML = `
-      <div style="text-align:center; padding:0.5rem 0.5rem;">
-        <div style="width:56px; height:56px; border-radius:50%; background:#eef2ff; color:#4f46e5; display:inline-flex; align-items:center; justify-content:center; font-size:1.6rem; margin-bottom:0.75rem;">
-          <i class="fa-solid fa-shield-halved"></i>
-        </div>
-        <h2 style="font-size:1.35rem; font-weight:800; margin-bottom:0.35rem;">Admin Dashboard Login</h2>
-        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.25rem;">
-          Enter Admin credentials to manage products, orders, and view store analytics.
-        </p>
+    // Also subscribe for state changes (e.g. already logged in, logout)
+    authService.subscribe((user) => {
+      if (user && user.role === "admin") {
+        this._showDashboard(user);
+      } else {
+        this._showGuard();
+      }
+    });
+  }
 
-        ${userStatusNotice}
+  _showDashboard(user) {
+    const guardEl = document.getElementById("admin-auth-guard");
+    const contentEl = document.getElementById("admin-root-content");
+    if (guardEl) guardEl.style.display = "none";
+    if (contentEl) contentEl.style.display = "flex";
+    const nameEl = document.getElementById("admin-user-name");
+    if (nameEl) nameEl.textContent = (user && user.name) ? user.name : "Admin";
+    this.loadAllData().catch(err => console.error("Dashboard load error:", err));
+  }
 
-        <form id="guard-login-form">
-          <div class="form-group" style="text-align:left; margin-bottom:1rem;">
-            <label style="font-weight:700; font-size:0.85rem;">Admin Email</label>
-            <input type="email" id="guard-email" class="form-control" value="admin@store.com" placeholder="admin@store.com" required>
-          </div>
-          <div class="form-group" style="text-align:left; margin-bottom:1.25rem;">
-            <label style="font-weight:700; font-size:0.85rem;">Admin Password</label>
-            <input type="password" id="guard-password" class="form-control" value="Admin" placeholder="Admin" required>
-          </div>
-          <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:0.75rem; margin-bottom:0.75rem; font-weight:700;">
-            <i class="fa-solid fa-right-to-bracket"></i> Sign In as Admin
-          </button>
-        </form>
-
-        <a href="index.html" class="nav-btn" style="width:100%; justify-content:center; border:1px solid var(--admin-border); padding:0.6rem; font-size:0.85rem;">
-          <i class="fa-solid fa-arrow-left"></i> Back to Storefront
-        </a>
-      </div>
-    `;
-
-    delete document.getElementById("guard-login-form")?.dataset.bound;
-    this.bindGuardLoginForm();
+  _showGuard() {
+    const guardEl = document.getElementById("admin-auth-guard");
+    const contentEl = document.getElementById("admin-root-content");
+    if (guardEl) guardEl.style.display = "flex";
+    if (contentEl) contentEl.style.display = "none";
   }
 
   // ==========================================

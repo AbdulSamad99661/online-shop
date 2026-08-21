@@ -56,62 +56,68 @@ class AdminDashboard {
     const guardBody = document.getElementById("guard-card-body");
     if (!guardBody) return;
 
-    let userStatusNotice = "";
     if (user && user.role !== "admin") {
-      userStatusNotice = `
-        <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:0.75rem; margin-bottom:1rem; text-align:left; font-size:0.85rem; color:#991b1b;">
-          <i class="fa-solid fa-triangle-exclamation"></i> Signed in as Customer (<strong>${user.email}</strong>). Enter Admin credentials below to access Admin Dashboard:
+      guardBody.innerHTML = `
+        <div style="text-align:center; padding:1rem;">
+          <i class="fa-solid fa-lock" style="font-size:3rem; color:var(--danger); margin-bottom:1rem;"></i>
+          <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:0.5rem;">Access Restricted</h2>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">
+            You are signed in as <strong>${user.name}</strong> (${user.email}) which is a regular Customer account.
+            Admin credentials are required to access this dashboard.
+          </p>
+          <div style="display:flex; flex-direction:column; gap:0.75rem;">
+            <button id="btn-guard-admin-login" class="btn-primary" style="justify-content:center; background:#312e81;">
+              <i class="fa-solid fa-shield-halved"></i> 1-Click Quick Admin Login
+            </button>
+            <a href="index.html" class="nav-btn" style="justify-content:center; border:1px solid var(--border-color);">
+              <i class="fa-solid fa-arrow-left"></i> Back to Storefront
+            </a>
+          </div>
         </div>
       `;
-    }
-
-    guardBody.innerHTML = `
-      <div style="text-align:center; padding:0.5rem 0.5rem;">
-        <div style="width:56px; height:56px; border-radius:50%; background:#eef2ff; color:#4f46e5; display:inline-flex; align-items:center; justify-content:center; font-size:1.6rem; margin-bottom:0.75rem;">
-          <i class="fa-solid fa-shield-halved"></i>
-        </div>
-        <h2 style="font-size:1.35rem; font-weight:800; margin-bottom:0.35rem;">Admin Dashboard Login</h2>
-        <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.25rem;">
-          Enter Admin credentials to manage products, orders, and view store analytics.
-        </p>
-
-        ${userStatusNotice}
-
-        <form id="guard-login-form">
-          <div class="form-group" style="text-align:left; margin-bottom:1rem;">
-            <label style="font-weight:700; font-size:0.85rem;">Admin Email</label>
-            <input type="email" id="guard-email" class="form-control" value="admin@store.com" placeholder="admin@store.com" required>
+    } else {
+      guardBody.innerHTML = `
+        <div style="text-align:center; padding:1rem;">
+          <div style="width:64px; height:64px; border-radius:50%; background:#eef2ff; color:#4f46e5; display:inline-flex; align-items:center; justify-content:center; font-size:1.8rem; margin-bottom:1rem;">
+            <i class="fa-solid fa-shield-halved"></i>
           </div>
-          <div class="form-group" style="text-align:left; margin-bottom:1.25rem;">
-            <label style="font-weight:700; font-size:0.85rem;">Admin Password</label>
-            <input type="password" id="guard-password" class="form-control" value="Admin" placeholder="Admin" required>
-          </div>
-          <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:0.75rem; margin-bottom:0.75rem; font-weight:700;">
-            <i class="fa-solid fa-right-to-bracket"></i> Sign In as Admin
+          <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:0.5rem;">Admin Dashboard Login</h2>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.5rem;">
+            Enter Admin credentials to manage products, orders, and view store analytics.
+          </p>
+
+          <form id="guard-login-form">
+            <div class="form-group" style="text-align:left;">
+              <label>Admin Email</label>
+              <input type="email" id="guard-email" class="form-control" value="admin@store.com" required>
+            </div>
+            <div class="form-group" style="text-align:left;">
+              <label>Admin Password</label>
+              <input type="password" id="guard-password" class="form-control" value="Admin" required>
+            </div>
+            <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:0.75rem; margin-bottom:1rem;">
+              Sign In as Admin
+            </button>
+          </form>
+
+          <button id="btn-guard-admin-login" class="btn-admin-demo" style="width:100%; justify-content:center; padding:0.7rem;">
+            <i class="fa-solid fa-bolt"></i> 1-Click Instant Admin Login
           </button>
-        </form>
+        </div>
+      `;
 
-        <button id="btn-guard-admin-login" class="btn-admin-demo" style="width:100%; justify-content:center; padding:0.7rem; margin-bottom:0.75rem;">
-          <i class="fa-solid fa-bolt"></i> 1-Click Instant Admin Login
-        </button>
-
-        <a href="index.html" class="nav-btn" style="width:100%; justify-content:center; border:1px solid var(--admin-border); padding:0.6rem; font-size:0.85rem;">
-          <i class="fa-solid fa-arrow-left"></i> Back to Storefront
-        </a>
-      </div>
-    `;
-
-    document.getElementById("guard-login-form")?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = document.getElementById("guard-email").value;
-      const pass = document.getElementById("guard-password").value;
-      try {
-        await authService.login(email, pass);
-        toast.success("Admin authenticated successfully!");
-      } catch (err) {
-        toast.error(err.message);
-      }
-    });
+      document.getElementById("guard-login-form")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("guard-email").value;
+        const pass = document.getElementById("guard-password").value;
+        try {
+          await authService.login(email, pass);
+          toast.success("Admin authenticated successfully!");
+        } catch (err) {
+          toast.error(err.message);
+        }
+      });
+    }
 
     document.getElementById("btn-guard-admin-login")?.addEventListener("click", async () => {
       try {

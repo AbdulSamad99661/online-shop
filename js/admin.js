@@ -174,7 +174,7 @@ class AdminDashboard {
 
     const recent = this.orders.slice(0, 5);
     if (recent.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">No orders placed yet.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">No customer orders placed yet. Place an order on the storefront to test!</td></tr>`;
       return;
     }
 
@@ -182,15 +182,31 @@ class AdminDashboard {
       <tr>
         <td><strong>${order.id}</strong></td>
         <td>
-          <div style="font-weight:600;">${order.customerName}</div>
+          <div style="font-weight:700;">${order.customerName}</div>
           <div style="font-size:0.75rem; color:var(--text-muted);">${order.customerEmail}</div>
         </td>
-        <td>${order.items.length} items</td>
-        <td><strong>$${parseFloat(order.total).toFixed(2)}</strong></td>
+        <td>
+          <span style="font-weight:600;">${order.items.length} items</span>
+          <div style="font-size:0.75rem; color:var(--text-muted); max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            ${order.items.map(i => i.title).join(", ")}
+          </div>
+        </td>
+        <td><strong style="color:var(--admin-primary); font-size:0.95rem;">$${parseFloat(order.total).toFixed(2)}</strong></td>
         <td><span class="status-badge status-${order.status.toLowerCase()}">${order.status}</span></td>
-        <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+        <td>
+          <button class="btn-icon-action btn-view-recent-order" data-id="${order.id}" title="View Order Details">
+            <i class="fa-regular fa-eye"></i>
+          </button>
+        </td>
       </tr>
     `).join("");
+
+    tbody.querySelectorAll(".btn-view-recent-order").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-id");
+        this.openOrderDetailsModal(id);
+      });
+    });
   }
 
   // ==========================================
@@ -203,7 +219,12 @@ class AdminDashboard {
     }
     if (this.productSearchQuery.trim()) {
       const q = this.productSearchQuery.trim().toLowerCase();
-      list = list.filter(p => p.title?.toLowerCase().includes(q) || p.category?.toLowerCase().includes(q));
+      list = list.filter(p => 
+        p.title?.toLowerCase().includes(q) || 
+        p.category?.toLowerCase().includes(q) ||
+        p.id?.toLowerCase().includes(q) ||
+        p.description?.toLowerCase().includes(q)
+      );
     }
     return list;
   }
@@ -214,7 +235,7 @@ class AdminDashboard {
     if (!tbody) return;
 
     const filtered = this.getFilteredProducts();
-    if (countEl) countEl.textContent = `${filtered.length} products`;
+    if (countEl) countEl.textContent = `${filtered.length} products total`;
 
     const totalPages = Math.ceil(filtered.length / this.itemsPerPage) || 1;
     this.currentPage = Math.min(this.currentPage, totalPages);
@@ -236,7 +257,7 @@ class AdminDashboard {
           <div style="font-weight:700; max-width:280px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.title}</div>
           <div style="font-size:0.75rem; color:var(--text-muted);">ID: ${p.id}</div>
         </td>
-        <td><span class="brand-badge" style="background:#eef2ff; color:#4f46e5;">${p.category || 'General'}</span></td>
+        <td><span class="brand-badge" style="background:#eef2ff; color:#4f46e5; font-weight:700;">${p.category || 'General'}</span></td>
         <td><strong>$${parseFloat(p.price).toFixed(2)}</strong></td>
         <td>
           <span style="font-weight:600; color:${p.stock < 10 ? 'var(--danger)' : 'inherit'};">
@@ -296,14 +317,21 @@ class AdminDashboard {
       return;
     }
 
+    let pageButtonsHtml = "";
+    for (let i = 1; i <= totalPages; i++) {
+      pageButtonsHtml += `
+        <button class="nav-btn btn-page-num ${i === this.currentPage ? 'active' : ''}" data-page="${i}" style="${i === this.currentPage ? 'background:#4f46e5; color:white;' : ''}">
+          ${i}
+        </button>
+      `;
+    }
+
     container.innerHTML = `
-      <div style="display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:1rem 0;">
+      <div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:0.4rem; padding:1.25rem 0;">
         <button id="btn-prev-page" class="nav-btn" ${this.currentPage === 1 ? 'disabled style="opacity:0.5;"' : ''}>
           <i class="fa-solid fa-chevron-left"></i> Prev
         </button>
-        <span style="font-size:0.85rem; font-weight:600; color:var(--text-muted);">
-          Page ${this.currentPage} of ${totalPages}
-        </span>
+        ${pageButtonsHtml}
         <button id="btn-next-page" class="nav-btn" ${this.currentPage === totalPages ? 'disabled style="opacity:0.5;"' : ''}>
           Next <i class="fa-solid fa-chevron-right"></i>
         </button>
@@ -318,6 +346,20 @@ class AdminDashboard {
     });
 
     container.querySelector("#btn-next-page")?.addEventListener("click", () => {
+      if (this.currentPage < totalPages) {
+        this.currentPage++;
+        this.renderProductsTable();
+      }
+    });
+
+    container.querySelectorAll(".btn-page-num").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const page = parseInt(btn.getAttribute("data-page"));
+        this.currentPage = page;
+        this.renderProductsTable();
+      });
+    });
+  }
       if (this.currentPage < totalPages) {
         this.currentPage++;
         this.renderProductsTable();
@@ -581,6 +623,13 @@ class AdminDashboard {
     const categorySelect = document.getElementById("admin-product-category-filter");
     categorySelect?.addEventListener("change", (e) => {
       this.productCategoryFilter = e.target.value;
+      this.currentPage = 1;
+      this.renderProductsTable();
+    });
+
+    const limitSelect = document.getElementById("admin-product-limit");
+    limitSelect?.addEventListener("change", (e) => {
+      this.itemsPerPage = parseInt(e.target.value) || 12;
       this.currentPage = 1;
       this.renderProductsTable();
     });

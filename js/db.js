@@ -352,9 +352,18 @@ export class DatabaseService {
           const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
           list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
           return list;
+        } else {
+          // If Firestore orders collection is empty, seed demo customer orders to Firestore
+          console.log("Firestore orders empty. Seeding initial customer orders...");
+          const demoOrders = getLocalOrders();
+          for (const order of demoOrders) {
+            await setDoc(doc(db, "orders", order.id), order);
+          }
+          return demoOrders;
         }
       } catch (err) {
-        console.error("Firestore getOrders error:", err);
+        console.warn("Firestore getOrders warning, using local dataset fallback:", err.message);
+        return getLocalOrders();
       }
     }
     return getLocalOrders();
@@ -394,18 +403,37 @@ export class DatabaseService {
 
   // Get all registered users (Admin view)
   async getUsers() {
+    const defaultLocalUsers = [
+      { uid: "admin_uid_001", name: "Admin", email: "admin@store.com", role: "admin", createdAt: new Date().toISOString() },
+      { uid: "cust_uid_001", name: "Jane Doe", email: "jane@example.com", role: "customer", createdAt: new Date(Date.now() - 86400000 * 2).toISOString() },
+      { uid: "cust_uid_002", name: "Alex Rivera", email: "alex.rivera@example.com", role: "customer", createdAt: new Date(Date.now() - 86400000 * 5).toISOString() },
+      { uid: "cust_uid_003", name: "Sam Mitchell", email: "sam.m@example.com", role: "customer", createdAt: new Date(Date.now() - 86400000 * 8).toISOString() }
+    ];
+
     if (isFirebaseLive && db) {
       try {
         const snap = await getDocs(collection(db, "users"));
         if (!snap.empty) {
           return snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+        } else {
+          // Auto-seed default users to Firestore
+          for (const u of defaultLocalUsers) {
+            await setDoc(doc(db, "users", u.uid), u);
+          }
+          return defaultLocalUsers;
         }
       } catch (err) {
-        console.error("Firestore getUsers error:", err);
+        console.warn("Firestore getUsers warning, using local dataset fallback:", err.message);
       }
     }
     const localUsers = localStorage.getItem("ecommerce_sandbox_users");
-    return localUsers ? JSON.parse(localUsers) : [];
+    if (localUsers) {
+      try {
+        const parsed = JSON.parse(localUsers);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {}
+    }
+    return defaultLocalUsers;
   }
 
   // Calculate high-level KPIs for Admin Overview

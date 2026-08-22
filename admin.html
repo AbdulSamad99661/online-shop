@@ -445,6 +445,26 @@
                       <input type="text" id="admin-cfg-app-id" class="form-control">
                     </div>
 
+                    <h4 class="fb-section-title" style="margin-top:1.5rem;">Customer invoice emails</h4>
+                    <p class="panel-subtitle" style="margin-bottom:0.85rem;">Optional EmailJS keys. If empty, AuraStore still emails the checkout address through FormSubmit (first-time inbox confirmation may be required).</p>
+                    <div class="form-group">
+                      <label for="admin-emailjs-public">EmailJS Public Key</label>
+                      <input type="text" id="admin-emailjs-public" class="form-control" placeholder="Optional">
+                    </div>
+                    <div class="fb-field-grid">
+                      <div class="form-group">
+                        <label for="admin-emailjs-service">Service ID</label>
+                        <input type="text" id="admin-emailjs-service" class="form-control" placeholder="service_xxxxx">
+                      </div>
+                      <div class="form-group">
+                        <label for="admin-emailjs-template">Template ID</label>
+                        <input type="text" id="admin-emailjs-template" class="form-control" placeholder="template_xxxxx">
+                      </div>
+                    </div>
+                    <button type="button" id="btn-save-emailjs" class="btn-admin-primary" style="margin-bottom:1.25rem;">
+                      <i class="fa-solid fa-envelope"></i> Save Email Settings
+                    </button>
+
                     <div class="fb-action-row">
                       <button type="button" id="btn-test-fb-connection" class="btn-admin-primary">
                         <i class="fa-solid fa-plug"></i> Test Connection

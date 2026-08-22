@@ -11,6 +11,7 @@ import {
   isPlaceholderConfig
 } from "./firebase-config.js";
 import { escapeHtml, formatCurrency, parseFirebaseConfigJson } from "./utils.js";
+import { sendOrderEmail, getEmailJsConfig, saveEmailJsConfig, buildInvoiceView, printInvoice } from "./email.js";
 
 class AdminDashboard {
   constructor() {
@@ -418,8 +419,20 @@ class AdminDashboard {
     tbody.querySelectorAll(".status-select-dropdown").forEach((select) => {
       select.addEventListener("change", async () => {
         try {
-          await dbService.updateOrderStatus(select.getAttribute("data-id"), select.value);
-          toast.success(`Order status updated to ${select.value}`);
+          const id = select.getAttribute("data-id");
+          const newStatus = select.value;
+          await dbService.updateOrderStatus(id, newStatus);
+          const order = this.orders.find((o) => o.id === id);
+          if (order?.customerEmail) {
+            try {
+              await sendOrderEmail({ ...order, status: newStatus }, newStatus);
+              toast.success(`Status set to ${newStatus}. Invoice emailed to ${order.customerEmail}.`);
+            } catch (mailErr) {
+              toast.warning(`Status updated, but email failed: ${mailErr.message}`);
+            }
+          } else {
+            toast.success(`Order status updated to ${newStatus}`);
+          }
           await this.loadAllData();
         } catch (err) {
           toast.error(err.message);
@@ -439,49 +452,36 @@ class AdminDashboard {
     if (!order || !modal || !body) return;
 
     body.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
-        <div>
-          <h3 style="font-size:1.2rem; font-weight:800;">Order: ${escapeHtml(order.id)}</h3>
-          <span style="font-size:0.8rem; color:var(--text-muted);">Placed on ${order.createdAt ? new Date(order.createdAt).toLocaleString() : "—"}</span>
-        </div>
-        <span class="status-badge status-${String(order.status || "pending").toLowerCase()}">${escapeHtml(order.status)}</span>
-      </div>
-      <div class="order-details-grid">
-        <div>
-          <h4 style="font-weight:700; margin-bottom:0.4rem; color:var(--admin-primary);">Customer Info</h4>
-          <p><strong>Name:</strong> ${escapeHtml(order.customerName)}</p>
-          <p><strong>Email:</strong> ${escapeHtml(order.customerEmail)}</p>
-          <p><strong>Phone:</strong> ${escapeHtml(order.customerPhone || "N/A")}</p>
-        </div>
-        <div>
-          <h4 style="font-weight:700; margin-bottom:0.4rem; color:var(--admin-primary);">Shipping & Payment</h4>
-          <p><strong>Address:</strong> ${escapeHtml(order.shippingAddress || "Standard Delivery")}</p>
-          <p><strong>Method:</strong> ${escapeHtml(order.paymentMethod || "Credit Card")}</p>
-        </div>
-      </div>
-      <h4 style="font-weight:700; margin-bottom:0.75rem;">Items Purchased (${order.items?.length || 0})</h4>
-      <div style="border:1px solid var(--admin-border); border-radius:8px; overflow:hidden; margin-bottom:1.5rem;">
-        ${(order.items || []).map((item) => `
-          <div style="display:flex; align-items:center; gap:1rem; padding:0.75rem 1rem; border-bottom:1px solid var(--admin-border);">
-            <img src="${escapeHtml(item.image)}" alt="" style="width:40px; height:40px; border-radius:6px; object-fit:cover;">
-            <div style="flex:1;">
-              <div style="font-weight:600; font-size:0.9rem;">${escapeHtml(item.title)}</div>
-              <div style="font-size:0.78rem; color:var(--text-muted);">${formatCurrency(item.price)} each</div>
-            </div>
-            <div style="font-weight:700;">${item.quantity}x</div>
-            <div style="font-weight:800; min-width:70px; text-align:right;">${formatCurrency(item.price * item.quantity)}</div>
-          </div>
-        `).join("")}
-      </div>
-      <div style="display:flex; flex-direction:column; gap:0.4rem; font-size:0.9rem; padding:0.75rem; background:#f1f5f9; border-radius:8px;">
-        <div style="display:flex; justify-content:space-between;"><span>Subtotal:</span> <span>${formatCurrency(order.subtotal || order.total)}</span></div>
-        <div style="display:flex; justify-content:space-between;"><span>Tax:</span> <span>${formatCurrency(order.tax || 0)}</span></div>
-        <div style="display:flex; justify-content:space-between;"><span>Shipping:</span> <span>${Number(order.shipping) === 0 ? "FREE" : formatCurrency(order.shipping)}</span></div>
-        <div style="display:flex; justify-content:space-between; font-weight:800; font-size:1.1rem; border-top:1px dashed var(--admin-border); padding-top:0.5rem;">
-          <span>Total:</span> <span style="color:var(--admin-primary);">${formatCurrency(order.total)}</span>
-        </div>
+      ${buildInvoiceView(order, order.status || "Pending")}
+      <div class="invoice-actions">
+        <button type="button" id="btn-admin-print-invoice" class="nav-btn" style="border:1px solid var(--admin-border);">
+          <i class="fa-solid fa-print"></i> Print / Save invoice
+        </button>
+        <button type="button" id="btn-admin-resend-invoice" class="btn-admin-primary">
+          <i class="fa-solid fa-envelope"></i> Resend invoice email
+        </button>
       </div>
     `;
+
+    body.querySelector("#btn-admin-print-invoice")?.addEventListener("click", () => {
+      try { printInvoice(order, order.status || "Pending"); }
+      catch (err) { toast.error(err.message); }
+    });
+
+    body.querySelector("#btn-admin-resend-invoice")?.addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      try {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Sending...`;
+        await sendOrderEmail(order, order.status || "Pending");
+        toast.success(`Invoice emailed to ${order.customerEmail}`);
+      } catch (err) {
+        toast.error(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-envelope"></i> Resend invoice email`;
+      }
+    });
 
     modal.classList.add("active");
     document.body.style.overflow = "hidden";
@@ -693,6 +693,14 @@ class AdminDashboard {
 
     this.fillFirebaseForm(config);
     this.renderFirebaseChecklist(live, config);
+
+    const emailCfg = getEmailJsConfig();
+    const publicEl = document.getElementById("admin-emailjs-public");
+    const serviceEl = document.getElementById("admin-emailjs-service");
+    const templateEl = document.getElementById("admin-emailjs-template");
+    if (publicEl) publicEl.value = emailCfg.publicKey || "";
+    if (serviceEl) serviceEl.value = emailCfg.serviceId || "";
+    if (templateEl) templateEl.value = emailCfg.templateId || "";
   }
 
   renderFirebaseChecklist(live, config) {
@@ -752,6 +760,15 @@ class AdminDashboard {
         return;
       }
       saveCustomFirebaseConfig(config);
+    });
+
+    document.getElementById("btn-save-emailjs")?.addEventListener("click", () => {
+      saveEmailJsConfig({
+        publicKey: document.getElementById("admin-emailjs-public")?.value || "",
+        serviceId: document.getElementById("admin-emailjs-service")?.value || "",
+        templateId: document.getElementById("admin-emailjs-template")?.value || ""
+      });
+      toast.success("Customer email settings saved.");
     });
 
     document.getElementById("btn-admin-reset-fb")?.addEventListener("click", () => {

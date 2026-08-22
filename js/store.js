@@ -10,6 +10,7 @@ import {
   isFirebaseLive 
 } from "./firebase-config.js";
 import { debounce, escapeHtml, formatCurrency } from "./utils.js";
+import { sendOrderEmail, buildInvoiceView, printInvoice } from "./email.js";
 
 class StoreApp {
   constructor() {
@@ -796,9 +797,20 @@ class StoreApp {
           total: summary.total
         });
 
+        let emailNote = "";
+        try {
+          btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Emailing invoice...`;
+          const sent = await sendOrderEmail(order, "Pending");
+          emailNote = `Invoice emailed to ${sent.to}. You will also get emails when the order is Processing, Shipped, or Delivered.`;
+          toast.success(`Invoice sent to ${sent.to}`);
+        } catch (mailErr) {
+          emailNote = `We could not automatically send the email yet. Check ${email} and confirm the first activation message if you receive one, then status updates will follow.`;
+          toast.warning(mailErr.message || "Invoice email could not be sent automatically.");
+        }
+
         cartService.clearCart();
         document.getElementById("modal-checkout").classList.remove("active");
-        this.openOrderConfirmationModal(order);
+        this.openOrderConfirmationModal(order, emailNote);
       } catch (err) {
         toast.error("Failed to place order. " + err.message);
       } finally {
@@ -811,43 +823,35 @@ class StoreApp {
   // ==========================================
   // ORDER CONFIRMATION MODAL
   // ==========================================
-  openOrderConfirmationModal(order) {
+  openOrderConfirmationModal(order, emailNote = "") {
     const modal = document.getElementById("modal-order-confirm");
     const body = document.getElementById("order-confirm-body");
     if (!modal || !body) return;
 
     body.innerHTML = `
-      <div style="text-align:center; padding: 1.5rem 0;">
-        <div style="width:70px; height:70px; border-radius:50%; background:#d1fae5; color:#059669; display:inline-flex; align-items:center; justify-content:center; font-size:2rem; margin-bottom:1rem;">
+      <div style="text-align:center; padding: 0.5rem 0 1rem;">
+        <div style="width:64px; height:64px; border-radius:50%; background:#d1fae5; color:#059669; display:inline-flex; align-items:center; justify-content:center; font-size:1.7rem; margin-bottom:0.75rem;">
           <i class="fa-solid fa-check"></i>
         </div>
-        <h2 style="font-size:1.4rem; font-weight:800; margin-bottom:0.4rem;">Thank You for Your Order!</h2>
-        <p style="color:var(--text-muted); font-size:0.9rem;">Your order <strong style="color:var(--primary);">${order.id}</strong> has been successfully placed.</p>
+        <h2 style="font-size:1.3rem; font-weight:800; margin-bottom:0.3rem;">Invoice sent</h2>
+        <p style="color:var(--text-muted); font-size:0.88rem;">A copy of this invoice was emailed to <strong>${escapeHtml(order.customerEmail)}</strong>.</p>
       </div>
-
-      <div style="background:var(--bg-surface-alt); border-radius:var(--radius-md); padding:1rem; margin-bottom:1.5rem; font-size:0.88rem;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
-          <span style="color:var(--text-muted);">Customer:</span>
-          <strong>${order.customerName}</strong>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
-          <span style="color:var(--text-muted);">Email:</span>
-          <span>${order.customerEmail}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
-          <span style="color:var(--text-muted);">Status:</span>
-          <span class="status-badge status-pending">Pending</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--border-color); padding-top:0.5rem; margin-top:0.5rem;">
-          <span>Total Paid:</span>
-          <strong style="font-size:1.05rem; color:var(--primary);">${formatCurrency(order.total)}</strong>
-        </div>
+      ${buildInvoiceView(order, "Pending")}
+      ${emailNote ? `<p class="invoice-note">${escapeHtml(emailNote)}</p>` : ""}
+      <div class="invoice-actions">
+        <button type="button" id="btn-print-invoice" class="nav-btn" style="border:1px solid var(--border-color);">
+          <i class="fa-solid fa-print"></i> Print / Save invoice
+        </button>
+        <button id="btn-confirm-continue" class="btn-primary" style="justify-content:center; padding:0.8rem;">
+          Continue Shopping
+        </button>
       </div>
-
-      <button id="btn-confirm-continue" class="btn-primary" style="width:100%; justify-content:center; padding:0.8rem;">
-        Continue Shopping
-      </button>
     `;
+
+    body.querySelector("#btn-print-invoice")?.addEventListener("click", () => {
+      try { printInvoice(order, "Pending"); }
+      catch (err) { toast.error(err.message); }
+    });
 
     body.querySelector("#btn-confirm-continue")?.addEventListener("click", () => {
       modal.classList.remove("active");
@@ -902,13 +906,24 @@ class StoreApp {
             <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem;">
               Items: ${order.items.map(i => `${i.quantity}x ${i.title}`).join(", ")}
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem;">
-              <span>Total: <strong style="color:var(--text-main);">$${parseFloat(order.total).toFixed(2)}</strong></span>
-              <span style="font-size:0.8rem; color:var(--text-light);">${order.paymentMethod || 'Credit Card'}</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.88rem; gap:0.75rem;">
+              <span>Total: <strong style="color:var(--text-main);">${formatCurrency(order.total)}</strong></span>
+              <button type="button" class="nav-btn btn-view-invoice" data-id="${escapeHtml(order.id)}" style="border:1px solid var(--border-color); font-size:0.8rem;">
+                View invoice
+              </button>
             </div>
           </div>
         `;
       }).join("");
+
+      body.querySelectorAll(".btn-view-invoice").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const found = orders.find((o) => o.id === btn.getAttribute("data-id"));
+          if (!found) return;
+          try { printInvoice(found, found.status || "Pending"); }
+          catch (err) { toast.error(err.message); }
+        });
+      });
     } catch (e) {
       body.innerHTML = `<div style="color:var(--danger); text-align:center; padding:2rem;">Failed to fetch orders.</div>`;
     }

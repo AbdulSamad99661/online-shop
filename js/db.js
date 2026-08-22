@@ -395,7 +395,11 @@ export class DatabaseService {
     if (isFirebaseLive && db) {
       try {
         const docRef = doc(db, "orders", orderId);
-        await updateDoc(docRef, { status: newStatus });
+        await updateDoc(docRef, {
+          status: newStatus,
+          lastEmailStatus: newStatus,
+          lastEmailAt: new Date().toISOString()
+        });
         return true;
       } catch (err) {
         throw new Error(formatAuthError(err) || "Could not update order status in Firestore.");
@@ -406,6 +410,8 @@ export class DatabaseService {
     const idx = orders.findIndex(o => o.id === orderId);
     if (idx !== -1) {
       orders[idx].status = newStatus;
+      orders[idx].lastEmailStatus = newStatus;
+      orders[idx].lastEmailAt = new Date().toISOString();
       setLocalOrders(orders);
       return true;
     }

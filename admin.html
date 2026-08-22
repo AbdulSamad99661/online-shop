@@ -37,7 +37,7 @@
             Enter Admin credentials to manage products, orders, and view store analytics.
           </p>
 
-          <form id="guard-login-form">
+          <form id="guard-login-form" action="javascript:void(0);" onsubmit="return false;">
             <div class="form-group" style="text-align:left; margin-bottom:1rem;">
               <label style="font-weight:700; font-size:0.85rem;">Admin Email</label>
               <input type="email" id="guard-email" class="form-control" value="admin@store.com" placeholder="admin@store.com" required>
@@ -46,7 +46,7 @@
               <label style="font-weight:700; font-size:0.85rem;">Admin Password</label>
               <input type="password" id="guard-password" class="form-control" value="Admin" placeholder="Admin" required>
             </div>
-            <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:0.75rem; margin-bottom:0.75rem; font-weight:700;">
+            <button type="button" id="btn-guard-submit" class="btn-primary" style="width:100%; justify-content:center; padding:0.75rem; margin-bottom:0.75rem; font-weight:700;">
               <i class="fa-solid fa-right-to-bracket"></i> Sign In as Admin
             </button>
           </form>
@@ -364,7 +364,7 @@
 
             <div id="admin-fb-status-box" style="margin-bottom: 1.5rem;"></div>
 
-            <form id="admin-firebase-form" style="max-width: 650px;">
+            <form id="admin-firebase-form" action="javascript:void(0);" onsubmit="return false;" style="max-width: 650px;">
               <div class="form-group">
                 <label>API Key (apiKey)</label>
                 <input type="text" id="admin-cfg-api-key" class="form-control" required>
@@ -420,7 +420,7 @@
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
-        <form id="form-product">
+        <form id="form-product" action="javascript:void(0);" onsubmit="return false;">
           <div class="form-group">
             <label for="prod-title">Product Title</label>
             <input type="text" id="prod-title" class="form-control" placeholder="e.g. Sony WH-1000XM5 Headphones" required>

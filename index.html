@@ -237,7 +237,7 @@
         </div>
 
         <!-- Login Form -->
-        <form id="auth-login-form">
+        <form id="auth-login-form" action="javascript:void(0);" onsubmit="return false;">
           <div class="form-group">
             <label for="login-email">Email Address</label>
             <input type="email" id="login-email" class="form-control" placeholder="name@example.com" required>
@@ -252,7 +252,7 @@
         </form>
 
         <!-- Signup Form -->
-        <form id="auth-signup-form" style="display:none;">
+        <form id="auth-signup-form" action="javascript:void(0);" onsubmit="return false;" style="display:none;">
           <div class="form-group">
             <label for="signup-name">Full Name</label>
             <input type="text" id="signup-name" class="form-control" placeholder="John Doe" required>
@@ -298,7 +298,7 @@
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
-        <form id="checkout-form">
+        <form id="checkout-form" action="javascript:void(0);" onsubmit="return false;">
           <div class="form-group">
             <label for="checkout-name">Recipient Full Name</label>
             <input type="text" id="checkout-name" class="form-control" placeholder="Jane Doe" required>
@@ -385,7 +385,7 @@
           Paste your Firebase web credentials from the Firebase Console (Project Settings > General > Your Apps) to connect directly to Cloud Firestore.
         </p>
 
-        <form id="firebase-config-form">
+        <form id="firebase-config-form" action="javascript:void(0);" onsubmit="return false;">
           <div class="form-group">
             <label>API Key</label>
             <input type="text" id="cfg-api-key" class="form-control" required>

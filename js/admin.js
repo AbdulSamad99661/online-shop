@@ -32,37 +32,53 @@ class AdminDashboard {
   }
 
   initAuthGuard() {
-    // Bind the static form in HTML once - no re-rendering needed
     const form = document.getElementById("guard-login-form");
+    const submitBtn = document.getElementById("btn-guard-submit") || form?.querySelector("button");
+
+    const doAdminLogin = async () => {
+      const email = document.getElementById("guard-email")?.value?.trim() || "admin@store.com";
+      const pass = document.getElementById("guard-password")?.value || "Admin";
+
+      try {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...`;
+        }
+        const user = await authService.login(email, pass);
+        this._showDashboard(user);
+        toast.success("Admin authenticated successfully!");
+      } catch (err) {
+        toast.error(err.message || "Login failed.");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> Sign In as Admin`;
+        }
+      }
+    };
+
     if (form) {
-      form.addEventListener("submit", async (e) => {
+      form.addEventListener("submit", (e) => {
         e.preventDefault();
-        const email = document.getElementById("guard-email")?.value?.trim();
-        const pass = document.getElementById("guard-password")?.value;
-        const submitBtn = form.querySelector("button[type='submit']");
-
-        if (!email || !pass) {
-          toast.error("Please enter email and password.");
-          return;
-        }
-
-        try {
-          if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...`;
-          }
-          const user = await authService.login(email, pass);
-          // Directly show dashboard without waiting for subscriber
-          this._showDashboard(user);
-        } catch (err) {
-          toast.error(err.message || "Login failed.");
-        } finally {
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> Sign In as Admin`;
-          }
-        }
+        e.stopPropagation();
+        doAdminLogin();
+        return false;
       });
+    }
+
+    if (submitBtn) {
+      submitBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        doAdminLogin();
+      });
+    }
+
+    // Check if session already exists
+    if (authService.currentUser && authService.currentUser.role === "admin") {
+      this._showDashboard(authService.currentUser);
+    } else {
+      this._showGuard();
     }
 
     // Also subscribe for state changes (e.g. already logged in, logout)

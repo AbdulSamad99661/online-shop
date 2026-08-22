@@ -462,11 +462,40 @@ class StoreApp {
       if (window.innerWidth > 1100) setMobileMenu(false);
     });
 
+    const applyCategory = (category) => {
+      document.querySelector(`.category-pill[data-category="${category}"]`)?.click();
+      document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
     document.querySelectorAll("[data-footer-category]").forEach((link) => {
-      link.addEventListener("click", () => {
-        const category = link.getAttribute("data-footer-category");
-        document.querySelector(`.category-pill[data-category="${category}"]`)?.click();
-      });
+      link.addEventListener("click", () => applyCategory(link.getAttribute("data-footer-category")));
+    });
+
+    document.querySelectorAll(".category-card").forEach((card) => {
+      card.addEventListener("click", () => applyCategory(card.getAttribute("data-category")));
+    });
+
+    document.getElementById("btn-hero-featured")?.addEventListener("click", () => {
+      const product = this.products.find((p) => p.id === "prod-001") || this.products[0];
+      if (!product) return;
+      cartService.addItem(product, 1);
+      toast.success(`Added "${product.title.slice(0, 28)}" to cart`);
+    });
+
+    document.getElementById("newsletter-form")?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("newsletter-email")?.value.trim();
+      if (!email) return;
+      e.target.reset();
+      toast.success("You're on the list. We'll send drop alerts to your inbox.");
+    });
+
+    const backToTop = document.getElementById("btn-back-to-top");
+    window.addEventListener("scroll", () => {
+      backToTop?.classList.toggle("visible", window.scrollY > 480);
+    });
+    backToTop?.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
     // Category Filter Pills

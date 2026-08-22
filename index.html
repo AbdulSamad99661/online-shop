@@ -21,6 +21,16 @@
 </head>
 <body>
 
+  <div class="announce-bar">
+    <div class="container announce-bar-inner">
+      <span><i class="fa-solid fa-truck-fast"></i> Free shipping on orders over $50</span>
+      <span class="announce-dot"></span>
+      <span><i class="fa-solid fa-rotate-left"></i> 14-day easy returns</span>
+      <span class="announce-dot"></span>
+      <span><i class="fa-solid fa-shield-halved"></i> Secure checkout</span>
+    </div>
+  </div>
+
   <!-- ==========================================
        NAVIGATION BAR
        ========================================== -->
@@ -36,8 +46,9 @@
       <nav class="nav-links" aria-label="Primary">
         <a href="#products-section">Shop</a>
         <a href="#featured-section">Featured</a>
-        <a href="#categories-section">Categories</a>
+        <a href="#category-showcase">Categories</a>
         <a href="#promo-section">Deals</a>
+        <a href="#reviews-section">Reviews</a>
       </nav>
 
       <!-- Navbar Instant Search -->
@@ -69,8 +80,9 @@
   <div id="mobile-nav-drawer" class="mobile-nav-drawer">
     <a href="#products-section">Shop</a>
     <a href="#featured-section">Featured</a>
-    <a href="#categories-section">Categories</a>
+    <a href="#category-showcase">Categories</a>
     <a href="#promo-section">Deals</a>
+    <a href="#reviews-section">Reviews</a>
   </div>
 
   <div class="mobile-search-bar">
@@ -129,14 +141,17 @@
         </div>
 
         <div class="hero-banner-card">
-          <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80" alt="Featured Product">
-          <div class="hero-card-tag">Featured Audio</div>
+          <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80" alt="ProSound Noise-Cancelling Headphones">
+          <div class="hero-card-tag">Editor's pick</div>
           <h3 class="hero-card-title">ProSound Noise-Cancelling Headphones</h3>
-          <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 0.75rem;">Premium 40-hour acoustic engineering with ultra-comfort memory cushions.</p>
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:1.3rem; font-weight:800; color:#38bdf8;">$149.99</span>
-            <span style="font-size:0.85rem; color:#94a3b8; text-decoration:line-through;">$199.99</span>
+          <p class="hero-card-copy">40-hour battery, memory-foam cushions, and studio-clear audio.</p>
+          <div class="hero-card-price-row">
+            <span class="hero-card-price">$149.99</span>
+            <span class="hero-card-was">$199.99</span>
           </div>
+          <button type="button" id="btn-hero-featured" class="btn-hero-primary hero-card-btn" data-product-id="prod-001">
+            <i class="fa-solid fa-cart-plus"></i> Add featured item
+          </button>
         </div>
       </div>
     </div>
@@ -161,6 +176,76 @@
         <span class="promo-kicker">Secure checkout</span>
         <h3>Sign in to place an order</h3>
         <p>Orders are saved to Firestore with customer details, items, and totals.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="category-showcase" class="category-showcase">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Shop by category</p>
+          <h2>Find your next favorite</h2>
+        </div>
+      </div>
+      <div class="category-card-grid">
+        <button type="button" class="category-card" data-category="Electronics">
+          <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&auto=format&fit=crop&q=80" alt="Electronics">
+          <span>Electronics</span>
+        </button>
+        <button type="button" class="category-card" data-category="Fashion">
+          <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&auto=format&fit=crop&q=80" alt="Fashion">
+          <span>Fashion</span>
+        </button>
+        <button type="button" class="category-card" data-category="Home & Living">
+          <img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=600&auto=format&fit=crop&q=80" alt="Home and Living">
+          <span>Home & Living</span>
+        </button>
+        <button type="button" class="category-card" data-category="Beauty">
+          <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=600&auto=format&fit=crop&q=80" alt="Beauty">
+          <span>Beauty</span>
+        </button>
+        <button type="button" class="category-card" data-category="Sports & Fitness">
+          <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=600&auto=format&fit=crop&q=80" alt="Sports">
+          <span>Sports</span>
+        </button>
+        <button type="button" class="category-card" data-category="Footwear">
+          <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&auto=format&fit=crop&q=80" alt="Footwear">
+          <span>Footwear</span>
+        </button>
+        <button type="button" class="category-card" data-category="Watches & Accessories">
+          <img src="https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=600&auto=format&fit=crop&q=80" alt="Watches">
+          <span>Watches</span>
+        </button>
+        <button type="button" class="category-card" data-category="Books & Stationery">
+          <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600&auto=format&fit=crop&q=80" alt="Books">
+          <span>Books</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="trust-section">
+    <div class="container trust-grid">
+      <article class="trust-card">
+        <i class="fa-solid fa-box-open"></i>
+        <h3>Curated catalog</h3>
+        <p>100 products across 8 categories, loaded live from Firestore.</p>
+      </article>
+      <article class="trust-card">
+        <i class="fa-solid fa-lock"></i>
+        <h3>Account checkout</h3>
+        <p>Sign in, place an order, and track status from Pending to Delivered.</p>
+      </article>
+      <article class="trust-card">
+        <i class="fa-solid fa-rotate"></i>
+        <h3>Live admin sync</h3>
+        <p>Price, stock, and new items update on the storefront after admin CRUD.</p>
+      </article>
+      <article class="trust-card">
+        <i class="fa-solid fa-headset"></i>
+        <h3>Fast support</h3>
+        <p>Order history, confirmation, and clear status badges after every purchase.</p>
       </article>
     </div>
   </section>
@@ -241,6 +326,58 @@
       <!-- Dynamically injected with 100 products by store.js -->
     </div>
   </main>
+
+  <section id="reviews-section" class="reviews-section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Customer stories</p>
+          <h2>Loved by shoppers</h2>
+        </div>
+      </div>
+      <div class="reviews-grid">
+        <article class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p>“Checkout was simple and I could see my order move from Pending to Shipped in the admin-style tracker.”</p>
+          <div class="review-author">
+            <strong>Ayesha K.</strong>
+            <span>Fashion & Beauty</span>
+          </div>
+        </article>
+        <article class="review-card">
+          <div class="review-stars">★★★★★</div>
+          <p>“Search and category filters actually work. Found running shoes in seconds and the cart totals updated live.”</p>
+          <div class="review-author">
+            <strong>Omar R.</strong>
+            <span>Sports & Footwear</span>
+          </div>
+        </article>
+        <article class="review-card">
+          <div class="review-stars">★★★★☆</div>
+          <p>“Clean product cards, clear prices, and the featured picks section is a nice shortcut before browsing all 100.”</p>
+          <div class="review-author">
+            <strong>Sara M.</strong>
+            <span>Home & Living</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="newsletter-section">
+    <div class="container newsletter-panel">
+      <div>
+        <p class="section-kicker">Stay in the loop</p>
+        <h2>Get drop alerts and member-only deals</h2>
+        <p>Join the list for new arrivals, restocks, and seasonal offers. No spam.</p>
+      </div>
+      <form id="newsletter-form" class="newsletter-form">
+        <label class="sr-only" for="newsletter-email">Email address</label>
+        <input type="email" id="newsletter-email" class="form-control" placeholder="you@email.com" required>
+        <button type="submit" class="btn-primary">Subscribe</button>
+      </form>
+    </div>
+  </section>
 
   <!-- ==========================================
        SHOPPING CART SLIDE-OUT DRAWER
@@ -499,19 +636,19 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <h3><i class="fa-solid fa-cube" style="color:var(--primary);"></i> AuraStore</h3>
-          <p style="font-size:0.9rem; line-height:1.6; margin-bottom:1rem;">
-            A complete e-commerce solution with real-time Firebase Authentication, Cloud Firestore database, full CRUD admin panel, and 100 curated products.
+          <h3><i class="fa-solid fa-cube"></i> AuraStore</h3>
+          <p>
+            Premium storefront with Firebase Authentication, Cloud Firestore, live cart totals, and a full admin dashboard.
           </p>
-          <div style="display:flex; gap:0.75rem; font-size:1.1rem;">
-            <a href="#" style="color:#cbd5e1;"><i class="fa-brands fa-github"></i></a>
-            <a href="#" style="color:#cbd5e1;"><i class="fa-brands fa-twitter"></i></a>
-            <a href="#" style="color:#cbd5e1;"><i class="fa-brands fa-instagram"></i></a>
+          <div class="footer-social">
+            <a href="https://github.com/AbdulSamad99661/online-shop" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+            <a href="#newsletter-form" aria-label="Newsletter"><i class="fa-solid fa-envelope"></i></a>
+            <a href="#reviews-section" aria-label="Reviews"><i class="fa-solid fa-star"></i></a>
           </div>
         </div>
 
         <div class="footer-col">
-          <h4>Categories</h4>
+          <h4>Shop</h4>
           <ul class="footer-links">
             <li><a href="#products-section" data-footer-category="Electronics">Electronics</a></li>
             <li><a href="#products-section" data-footer-category="Fashion">Fashion & Apparel</a></li>
@@ -522,13 +659,24 @@
         </div>
 
         <div class="footer-col">
-          <h4>Customer Care</h4>
+          <h4>Help</h4>
           <ul class="footer-links">
-            <li><a href="#products-section">Shop Catalog</a></li>
-            <li><a href="#">Shipping & Returns</a></li>
-            <li><a href="#">Privacy Policy</a></li>
-            <li><a href="#">Terms of Service</a></li>
+            <li><a href="#products-section">Shop catalog</a></li>
+            <li><a href="#reviews-section">Customer reviews</a></li>
+            <li><a href="admin.html">Admin dashboard</a></li>
+            <li><a href="#newsletter-form">Newsletter</a></li>
           </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>We accept</h4>
+          <p class="footer-pay-note">Demo payments at checkout: Card, PayPal, or Cash on Delivery.</p>
+          <div class="footer-pay">
+            <span>Visa</span>
+            <span>Mastercard</span>
+            <span>PayPal</span>
+            <span>COD</span>
+          </div>
         </div>
       </div>
 
@@ -540,6 +688,10 @@
   </footer>
 
   <!-- Storefront JavaScript Entry Point -->
+  <button type="button" id="btn-back-to-top" class="back-to-top" aria-label="Back to top">
+    <i class="fa-solid fa-arrow-up"></i>
+  </button>
+
   <script type="module" src="js/store.js"></script>
 </body>
 </html>

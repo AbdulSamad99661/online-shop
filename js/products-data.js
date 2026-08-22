@@ -1216,3 +1216,15 @@ export const INITIAL_PRODUCTS = [
     description: "Comprehensive developer guide covering cloud scalability, microservices, reactive UI patterns, and modern backend systems."
   }
 ];
+
+export const PRODUCT_CATEGORIES = [
+  "Electronics",
+  "Fashion",
+  "Home & Living",
+  "Beauty",
+  "Sports & Fitness",
+  "Footwear",
+  "Watches & Accessories",
+  "Books & Stationery"
+];
+

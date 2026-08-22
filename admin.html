@@ -22,49 +22,6 @@
 </head>
 <body class="admin-body">
 
-  <script>
-    function handleAdminLogin() {
-      const emailEl = document.getElementById("guard-email");
-      const email = emailEl ? emailEl.value.trim() : "admin@store.com";
-      const adminUser = {
-        uid: "admin_uid_001",
-        name: "Admin",
-        email: email || "admin@store.com",
-        role: "admin"
-      };
-      localStorage.setItem("ecommerce_sandbox_current_user", JSON.stringify(adminUser));
-
-      const guard = document.getElementById("admin-auth-guard");
-      const content = document.getElementById("admin-root-content");
-      if (guard) guard.style.setProperty("display", "none", "important");
-      if (content) content.style.setProperty("display", "flex", "important");
-
-      const nameEl = document.getElementById("admin-user-name");
-      if (nameEl) nameEl.textContent = "Admin";
-
-      if (window.authService) {
-        window.authService.currentUser = adminUser;
-        window.authService.notifyListeners();
-      }
-      if (window.adminDashboard) {
-        window.adminDashboard.loadAllData();
-      }
-    }
-
-    // Auto-reveal dashboard if already logged in
-    try {
-      const u = JSON.parse(localStorage.getItem("ecommerce_sandbox_current_user") || "null");
-      if (u && u.role === "admin") {
-        document.addEventListener("DOMContentLoaded", () => {
-          const guard = document.getElementById("admin-auth-guard");
-          const content = document.getElementById("admin-root-content");
-          if (guard) guard.style.setProperty("display", "none", "important");
-          if (content) content.style.setProperty("display", "flex", "important");
-        });
-      }
-    } catch(e) {}
-  </script>
-
   <!-- ==========================================
        AUTH GUARD (SHOWN IF NOT LOGGED IN AS ADMIN)
        ========================================== -->
@@ -77,22 +34,27 @@
           </div>
           <h2 style="font-size:1.35rem; font-weight:800; margin-bottom:0.35rem;">Admin Dashboard Login</h2>
           <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.25rem;">
-            Enter Admin credentials to manage products, orders, and view store analytics.
+            Sign in with Firebase Email/Password. Default admin: <strong>admin@store.com</strong> / <strong>Admin123</strong>
           </p>
 
-          <form id="guard-login-form" action="javascript:void(0);" onsubmit="handleAdminLogin(); return false;">
+          <form id="guard-login-form">
             <div class="form-group" style="text-align:left; margin-bottom:1rem;">
-              <label style="font-weight:700; font-size:0.85rem;">Admin Email</label>
+              <label for="guard-email" style="font-weight:700; font-size:0.85rem;">Admin Email</label>
               <input type="email" id="guard-email" class="form-control" value="admin@store.com" placeholder="admin@store.com" required>
             </div>
-            <div class="form-group" style="text-align:left; margin-bottom:1.25rem;">
-              <label style="font-weight:700; font-size:0.85rem;">Admin Password</label>
-              <input type="password" id="guard-password" class="form-control" value="Admin" placeholder="Admin" required>
+            <div class="form-group" style="text-align:left; margin-bottom:0.75rem;">
+              <label for="guard-password" style="font-weight:700; font-size:0.85rem;">Admin Password</label>
+              <input type="password" id="guard-password" class="form-control" value="Admin123" placeholder="Admin123" minlength="6" required>
             </div>
-            <button type="button" id="btn-guard-submit" onclick="handleAdminLogin()" class="btn-primary" style="width:100%; justify-content:center; padding:0.75rem; margin-bottom:0.75rem; font-weight:700;">
+            <div id="guard-login-error" class="form-error" hidden></div>
+            <button type="submit" id="btn-guard-submit" class="btn-primary" style="width:100%; justify-content:center; padding:0.75rem; margin-bottom:0.75rem; font-weight:700;">
               <i class="fa-solid fa-right-to-bracket"></i> Sign In as Admin
             </button>
           </form>
+
+          <button type="button" id="btn-create-admin-account" class="nav-btn" style="width:100%; justify-content:center; border:1px solid var(--admin-border); padding:0.6rem; font-size:0.85rem; margin-bottom:0.75rem;">
+            <i class="fa-solid fa-user-plus"></i> Create Admin Account in Firebase
+          </button>
 
           <a href="index.html" class="nav-btn" style="width:100%; justify-content:center; border:1px solid var(--admin-border); padding:0.6rem; font-size:0.85rem;">
             <i class="fa-solid fa-arrow-left"></i> Back to Storefront
@@ -215,6 +177,16 @@
                 <i class="fa-solid fa-users"></i>
               </div>
             </div>
+
+            <div class="kpi-card">
+              <div class="kpi-info">
+                <h4>Pending Orders</h4>
+                <div id="kpi-pending-orders" class="kpi-value">0</div>
+              </div>
+              <div class="kpi-icon-wrap kpi-info">
+                <i class="fa-solid fa-clock"></i>
+              </div>
+            </div>
           </div>
 
           <!-- Quick Actions Bar -->
@@ -248,6 +220,7 @@
                     <th>Total</th>
                     <th>Status</th>
                     <th>Date</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody id="table-recent-orders-body">
@@ -399,53 +372,99 @@
              TAB 5: FIREBASE SETUP & CONFIG
              ========================================== -->
         <section id="tab-pane-firebase" class="tab-pane">
-          <div class="admin-panel" style="padding: 2rem;">
-            <h3 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem;">Firebase Connection & Cloud Firestore Settings</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
-              Connect this web app to your Firebase project by entering your Web SDK config below. Once saved, all products, orders, and authentication will sync in real time with Cloud Firestore!
-            </p>
+          <div class="admin-panel firebase-setup-panel">
+            <div class="panel-header">
+              <div>
+                <h3>Firebase Authentication & Cloud Firestore</h3>
+                <p class="panel-subtitle">Connect real Email/Password Auth and store products, users, and orders in Firestore.</p>
+              </div>
+            </div>
 
-            <div id="admin-fb-status-box" style="margin-bottom: 1.5rem;"></div>
+            <div class="firebase-setup-body">
+              <div id="admin-fb-status-box"></div>
+              <div id="admin-fb-test-result" class="fb-test-result" hidden></div>
 
-            <form id="admin-firebase-form" action="javascript:void(0);" onsubmit="return false;" style="max-width: 650px;">
-              <div class="form-group">
-                <label>API Key (apiKey)</label>
-                <input type="text" id="admin-cfg-api-key" class="form-control" required>
-              </div>
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                <div class="form-group">
-                  <label>Auth Domain (authDomain)</label>
-                  <input type="text" id="admin-cfg-auth-domain" class="form-control" required>
+              <div class="firebase-setup-grid">
+                <div>
+                  <h4 class="fb-section-title">Setup checklist</h4>
+                  <ol id="fb-setup-checklist" class="fb-checklist"></ol>
+                  <div class="fb-help-box">
+                    <p><strong>Firebase Console steps</strong></p>
+                    <ol>
+                      <li>Create a project at <a href="https://console.firebase.google.com/" target="_blank" rel="noopener">console.firebase.google.com</a></li>
+                      <li>Authentication → Sign-in method → enable <strong>Email/Password</strong></li>
+                      <li>Firestore Database → Create database (test mode is fine for class work)</li>
+                      <li>Project settings → Your apps → Web → copy <code>firebaseConfig</code></li>
+                      <li>Firestore → Rules → paste <code>firestore.rules</code> from this project and Publish</li>
+                    </ol>
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label>Project ID (projectId)</label>
-                  <input type="text" id="admin-cfg-project-id" class="form-control" required>
-                </div>
-              </div>
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-                <div class="form-group">
-                  <label>Storage Bucket (storageBucket)</label>
-                  <input type="text" id="admin-cfg-storage-bucket" class="form-control">
-                </div>
-                <div class="form-group">
-                  <label>Messaging Sender ID (messagingSenderId)</label>
-                  <input type="text" id="admin-cfg-messaging-sender-id" class="form-control">
-                </div>
-              </div>
-              <div class="form-group">
-                <label>App ID (appId)</label>
-                <input type="text" id="admin-cfg-app-id" class="form-control">
-              </div>
 
-              <div style="display:flex; gap:1rem; margin-top:1.5rem;">
-                <button type="submit" class="btn-admin-primary" style="padding:0.75rem 1.5rem;">
-                  <i class="fa-solid fa-floppy-disk"></i> Save & Apply Configuration
-                </button>
-                <button type="button" id="btn-admin-reset-fb" class="nav-btn" style="border:1px solid var(--admin-border);">
-                  Reset to Sandbox Defaults
-                </button>
+                <div>
+                  <h4 class="fb-section-title">Paste firebaseConfig JSON</h4>
+                  <textarea id="admin-cfg-json" class="form-control fb-json-input" rows="7" placeholder='const firebaseConfig = {
+  apiKey: "...",
+  authDomain: "...",
+  projectId: "...",
+  storageBucket: "...",
+  messagingSenderId: "...",
+  appId: "..."
+};'></textarea>
+                  <button type="button" id="btn-parse-fb-json" class="btn-admin-primary" style="margin: 0.75rem 0 1.25rem;">
+                    <i class="fa-solid fa-code"></i> Parse Config into Fields
+                  </button>
+
+                  <form id="admin-firebase-form">
+                    <div class="form-group">
+                      <label for="admin-cfg-api-key">API Key</label>
+                      <input type="text" id="admin-cfg-api-key" class="form-control" required>
+                    </div>
+                    <div class="fb-field-grid">
+                      <div class="form-group">
+                        <label for="admin-cfg-auth-domain">Auth Domain</label>
+                        <input type="text" id="admin-cfg-auth-domain" class="form-control" required>
+                      </div>
+                      <div class="form-group">
+                        <label for="admin-cfg-project-id">Project ID</label>
+                        <input type="text" id="admin-cfg-project-id" class="form-control" required>
+                      </div>
+                    </div>
+                    <div class="fb-field-grid">
+                      <div class="form-group">
+                        <label for="admin-cfg-storage-bucket">Storage Bucket</label>
+                        <input type="text" id="admin-cfg-storage-bucket" class="form-control">
+                      </div>
+                      <div class="form-group">
+                        <label for="admin-cfg-messaging-sender-id">Messaging Sender ID</label>
+                        <input type="text" id="admin-cfg-messaging-sender-id" class="form-control">
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="admin-cfg-app-id">App ID</label>
+                      <input type="text" id="admin-cfg-app-id" class="form-control">
+                    </div>
+
+                    <div class="fb-action-row">
+                      <button type="button" id="btn-test-fb-connection" class="btn-admin-primary">
+                        <i class="fa-solid fa-plug"></i> Test Connection
+                      </button>
+                      <button type="submit" class="btn-admin-primary">
+                        <i class="fa-solid fa-floppy-disk"></i> Save &amp; Apply
+                      </button>
+                      <button type="button" id="btn-fb-bootstrap-admin" class="btn-admin-seed">
+                        <i class="fa-solid fa-user-shield"></i> Create Admin Account
+                      </button>
+                      <button type="button" id="btn-fb-seed-products" class="btn-admin-seed">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Seed 100 Products
+                      </button>
+                      <button type="button" id="btn-admin-reset-fb" class="nav-btn" style="border:1px solid var(--admin-border);">
+                        Reset
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
-            </form>
+            </div>
           </div>
         </section>
 
@@ -539,6 +558,6 @@
   </div>
 
   <!-- Admin JavaScript Entry Point -->
-  <script type="module" src="js/admin.js?v=4"></script>
+  <script type="module" src="js/admin.js?v=5"></script>
 </body>
 </html>

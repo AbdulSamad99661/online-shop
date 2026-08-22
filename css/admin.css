@@ -411,6 +411,140 @@ body.admin-body {
   color: #0f172a;
 }
 
+.empty-table-cell {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: #64748b;
+}
+
+.panel-subtitle {
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.firebase-setup-body {
+  padding: 1.5rem;
+}
+
+.firebase-setup-grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 1.75rem;
+  margin-top: 1.25rem;
+}
+
+.fb-section-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+}
+
+.fb-checklist {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+}
+
+.fb-checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.88rem;
+  color: #475569;
+}
+
+.fb-checklist li.done {
+  color: #047857;
+  font-weight: 600;
+}
+
+.fb-help-box {
+  background: #f8fafc;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.fb-help-box ol {
+  margin: 0.6rem 0 0 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.fb-help-box a {
+  color: var(--admin-primary);
+  font-weight: 700;
+}
+
+.fb-json-input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  min-height: 150px;
+}
+
+.fb-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.fb-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.fb-status-card,
+.fb-test-result {
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.fb-status-live {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.fb-status-sandbox {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+
+.fb-test-result.ok {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.fb-test-result.fail {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.fb-hint {
+  margin-top: 0.35rem;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 1100px) {
+  .firebase-setup-grid,
+  .fb-field-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 992px) {
   .admin-sidebar {
     transform: translateX(-100%);

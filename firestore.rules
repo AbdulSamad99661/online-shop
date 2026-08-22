@@ -1,44 +1,51 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper function to check if request is authenticated
+
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    // Helper function to check if user has Admin role
-    function isAdmin() {
-      return isAuthenticated() && 
-        (request.auth.token.email.matches('.*admin.*') || 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
-    
-    // Helper function to check if user is the document owner
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'admin@store.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         userDoc().role == 'admin')
+      );
+    }
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // 1. PRODUCTS COLLECTION
-    // Anyone can browse/read products. Only Admins can create, edit, or delete products.
     match /products/{productId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin() || true; // Set to true for initial setup / testing, or isAdmin() in production
+      allow create, update, delete: if isAdmin();
     }
 
-    // 2. USERS COLLECTION
-    // Users can read/write their own profiles. Admins can read all users.
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow write: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update, delete: if isOwner(userId) || isAdmin();
     }
 
-    // 3. ORDERS COLLECTION
-    // Customers can create orders and view their own orders. Admins can view and update all orders.
     match /orders/{orderId} {
-      allow create: if true; // Allows checkout flow
-      allow read: if isAuthenticated() || true;
-      allow update, delete: if isAdmin() || true;
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        resource.data.userId == request.auth.uid ||
+        resource.data.customerEmail == request.auth.token.email
+      );
+      allow update, delete: if isAdmin();
     }
   }
 }

@@ -33,14 +33,24 @@
         <span class="brand-badge">PRO</span>
       </a>
 
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#products-section">Shop</a>
+        <a href="#featured-section">Featured</a>
+        <a href="#categories-section">Categories</a>
+        <a href="#promo-section">Deals</a>
+      </nav>
+
       <!-- Navbar Instant Search -->
       <div class="nav-search-wrapper">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="nav-search-input" class="nav-search-input" placeholder="Search 100+ premium products (e.g. Headphones, Shoes, Serum)...">
+        <input type="text" id="nav-search-input" class="nav-search-input" placeholder="Search products by name...">
       </div>
 
       <!-- Navigation Actions -->
       <div class="nav-actions">
+        <button id="btn-mobile-nav" class="mobile-nav-toggle" aria-label="Open menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
         <!-- Auth Profile / Login Container -->
         <div id="nav-auth-container">
           <!-- Dynamically populated by authService in store.js -->
@@ -55,6 +65,14 @@
       </div>
     </div>
   </header>
+
+  <div id="mobile-nav-drawer" class="mobile-nav-drawer">
+    <a href="#products-section">Shop</a>
+    <a href="#featured-section">Featured</a>
+    <a href="#categories-section">Categories</a>
+    <a href="#promo-section">Deals</a>
+    <button type="button" id="mobile-search-focus" class="nav-btn">Search products</button>
+  </div>
 
   <!-- ==========================================
        HERO BANNER & PROMOTION SECTION
@@ -76,7 +94,10 @@
           </p>
           <div class="hero-buttons">
             <a href="#products-section" class="btn-hero-primary">
-              <i class="fa-solid fa-cart-shopping"></i> Shop 100 Products
+              <i class="fa-solid fa-cart-shopping"></i> Shop Collection
+            </a>
+            <a href="#featured-section" class="btn-hero-secondary">
+              View Featured
             </a>
           </div>
           <div class="hero-stats">
@@ -116,11 +137,44 @@
   <!-- ==========================================
        CATEGORY SHORTCUTS
        ========================================== -->
-  <section class="categories-section">
+  <section id="promo-section" class="promo-section">
+    <div class="container promo-grid">
+      <article class="promo-card promo-card-dark">
+        <span class="promo-kicker">This week</span>
+        <h3>Free shipping over $50</h3>
+        <p>Fast dispatch on every order, with live status updates after checkout.</p>
+      </article>
+      <article class="promo-card">
+        <span class="promo-kicker">New arrivals</span>
+        <h3>Seasonal tech &amp; home edit</h3>
+        <p>Browse featured picks, then filter by category or search by title.</p>
+      </article>
+      <article class="promo-card">
+        <span class="promo-kicker">Secure checkout</span>
+        <h3>Sign in to place an order</h3>
+        <p>Orders are saved to Firestore with customer details, items, and totals.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="featured-section" class="featured-section">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Featured products</p>
+          <h2>Top-rated picks</h2>
+        </div>
+        <a href="#products-section" class="nav-btn">Shop all</a>
+      </div>
+      <div id="featured-products-grid" class="products-grid featured-grid"></div>
+    </div>
+  </section>
+
+  <section id="categories-section" class="categories-section">
     <div class="container">
       <div class="category-pills-scroll">
         <button class="category-pill active" data-category="All">
-          <i class="fa-solid fa-grid-2"></i> All (100)
+          <i class="fa-solid fa-table-cells"></i> All <span class="pill-count">100</span>
         </button>
         <button class="category-pill" data-category="Electronics">
           <i class="fa-solid fa-laptop"></i> Electronics
@@ -246,6 +300,7 @@
             <label for="login-password">Password</label>
             <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
           </div>
+          <div id="login-form-error" class="form-error" hidden></div>
           <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:0.75rem;">
             Sign In
           </button>
@@ -265,6 +320,7 @@
             <label for="signup-password">Password (min 6 characters)</label>
             <input type="password" id="signup-password" class="form-control" placeholder="••••••••" minlength="6" required>
           </div>
+          <div id="signup-form-error" class="form-error" hidden></div>
           <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:0.75rem;">
             Create Account
           </button>
@@ -303,7 +359,7 @@
             <label for="checkout-name">Recipient Full Name</label>
             <input type="text" id="checkout-name" class="form-control" placeholder="Jane Doe" required>
           </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+          <div class="form-grid-2">
             <div class="form-group">
               <label for="checkout-email">Email Address</label>
               <input type="email" id="checkout-email" class="form-control" placeholder="jane@example.com" required>
@@ -449,11 +505,11 @@
         <div class="footer-col">
           <h4>Categories</h4>
           <ul class="footer-links">
-            <li><a href="#products-section">Electronics (15)</a></li>
-            <li><a href="#products-section">Fashion & Apparel (15)</a></li>
-            <li><a href="#products-section">Home & Living (15)</a></li>
-            <li><a href="#products-section">Beauty & Personal Care (15)</a></li>
-            <li><a href="#products-section">Sports & Fitness (15)</a></li>
+            <li><a href="#products-section" data-footer-category="Electronics">Electronics</a></li>
+            <li><a href="#products-section" data-footer-category="Fashion">Fashion & Apparel</a></li>
+            <li><a href="#products-section" data-footer-category="Home & Living">Home & Living</a></li>
+            <li><a href="#products-section" data-footer-category="Beauty">Beauty & Care</a></li>
+            <li><a href="#products-section" data-footer-category="Sports & Fitness">Sports & Fitness</a></li>
           </ul>
         </div>
 

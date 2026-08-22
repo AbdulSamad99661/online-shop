@@ -80,8 +80,16 @@ As requested, Admin access is pre-configured with default credentials:
 | **Password** | `Admin123` | Meets Firebase's 6+ character password security rule |
 | **Role** | `admin` | Unlocks full Admin Dashboard access & CRUD |
 
-### 1-Click Instant Admin Login
-Both the Customer Storefront (`index.html`) and the Admin Dashboard (`admin.html`) feature a **"1-Click Quick Admin Login"** button. Clicking this button automatically creates and authenticates the Admin account with a single click!
+### Admin Login (Firebase Authentication)
+Open `admin.html` and sign in with **admin@store.com** / **Admin123**.  
+If the account does not exist yet, use **Create Admin Account in Firebase** (or the same button on the Firebase Setup tab). This uses real Email/Password Authentication — it no longer bypasses Firebase with a localStorage shortcut.
+
+After the first successful login, go to **Firebase Setup** (`admin.html#firebase`) to:
+1. Paste your `firebaseConfig` JSON
+2. Test the Cloud Firestore connection
+3. Save & apply the keys
+4. Create the admin account
+5. Seed 100 products and 8 categories
 
 ---
 
@@ -117,13 +125,14 @@ ecommerce-store/
 │   ├── style.css                 # Storefront design system, responsive layout, cart drawer
 │   └── admin.css                 # Admin layout, sidebar navigation, data tables, status badges
 └── js/
-    ├── firebase-config.js        # Firebase SDK v10 initialization & config manager
-    ├── products-data.js          # 100 Curated E-Commerce Products Dataset
-    ├── auth.js                   # Firebase Auth & Role management (Admin / Customer)
-    ├── db.js                     # Cloud Firestore CRUD operations & bulk seeder
+    ├── firebase-config.js        # Firebase SDK v10 initialization, config, connection test
+    ├── products-data.js          # 100 curated products + category list
+    ├── utils.js                  # Shared helpers (errors, debounce, config parser)
+    ├── auth.js                   # Firebase Email/Password Auth + admin/customer roles
+    ├── db.js                     # Cloud Firestore CRUD, orders, categories, seeder
     ├── cart.js                   # Shopping cart state manager & total calculations
     ├── store.js                  # Storefront UI controller & instant search
-    ├── admin.js                  # Admin Dashboard controller & order status updates
+    ├── admin.js                  # Admin dashboard, product CRUD, orders, Firebase setup
     └── toast.js                  # Toast notification utility
 ```
 
@@ -131,5 +140,5 @@ ecommerce-store/
 - **Real-Time Synchronized State**: Updates in the Admin dashboard (new products, price edits, order status updates) immediately sync with the Customer storefront.
 - **Dynamic Cart & Checkout**: Slide-out cart drawer with live subtotal, 8% tax calculation, free shipping over \$50, and order tracking.
 - **Instant Search & Filter**: Instant search with debounce, category shortcut pills, and sorting by Price / Rating / Name.
-- **Role-Protected Admin Panel**: Route guards ensure only authenticated Admin users can create/edit/delete products or update order statuses.
+- **Role-Protected Admin Panel**: Firebase Email/Password login plus a role check. Only `admin` users can open the dashboard, manage products, and update order statuses.
 - **Offline / Sandbox Fallback**: If Firebase API keys are not yet configured, the app seamlessly runs in Local Sandbox Mode with full persistence in LocalStorage!

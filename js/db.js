@@ -14,9 +14,11 @@ import {
   where, 
   orderBy, 
   onSnapshot,
-  writeBatch
+  writeBatch,
+  serverTimestamp
 } from "./firebase-config.js";
-import { INITIAL_PRODUCTS } from "./products-data.js";
+import { INITIAL_PRODUCTS, PRODUCT_CATEGORIES } from "./products-data.js";
+import { formatAuthError } from "./utils.js";
 
 const LOCAL_PRODUCTS_KEY = "ecommerce_sandbox_products";
 const LOCAL_ORDERS_KEY = "ecommerce_sandbox_orders";
@@ -156,13 +158,9 @@ export class DatabaseService {
         const colRef = collection(db, "products");
         const snapshot = await getDocs(colRef);
         if (snapshot.empty) {
-          // If Firestore is empty, auto-seed with initial 100 products
-          console.log("Firestore products collection empty. Seeding 100 initial products...");
-          await this.seed100Products();
-          const newSnapshot = await getDocs(colRef);
-          return newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          return getLocalProducts();
         }
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        return snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
       } catch (err) {
         console.error("Firestore getProducts error, falling back to local dataset:", err);
         return getLocalProducts();
@@ -205,10 +203,13 @@ export class DatabaseService {
 
     if (isFirebaseLive && db) {
       try {
-        const docRef = await addDoc(collection(db, "products"), productData);
+        const docRef = await addDoc(collection(db, "products"), {
+          ...productData,
+          createdAt: serverTimestamp()
+        });
         return { id: docRef.id, ...productData };
       } catch (err) {
-        console.error("Firestore addProduct error:", err);
+        throw new Error(formatAuthError(err) || "Could not create product in Firestore.");
       }
     }
 
@@ -236,7 +237,7 @@ export class DatabaseService {
         await updateDoc(docRef, fieldsToUpdate);
         return { id, ...fieldsToUpdate };
       } catch (err) {
-        console.error("Firestore updateProduct error:", err);
+        throw new Error(formatAuthError(err) || "Could not update product in Firestore.");
       }
     }
 
@@ -259,7 +260,7 @@ export class DatabaseService {
         await deleteDoc(docRef);
         return true;
       } catch (err) {
-        console.error("Firestore deleteProduct error:", err);
+        throw new Error(formatAuthError(err) || "Could not delete product in Firestore.");
       }
     }
 
@@ -284,10 +285,11 @@ export class DatabaseService {
           }, { merge: true });
         }
         await batch.commit();
+        await this.seedCategories();
         console.log("Successfully seeded 100 products to Firestore!");
         return true;
       } catch (err) {
-        console.error("Firestore seed error:", err);
+        throw new Error(formatAuthError(err) || "Could not seed products to Firestore.");
       }
     }
 
@@ -328,10 +330,14 @@ export class DatabaseService {
 
     if (isFirebaseLive && db) {
       try {
-        await setDoc(doc(db, "orders", orderId), orderDoc);
+        await setDoc(doc(db, "orders", orderId), {
+          ...orderDoc,
+          createdAt: orderDoc.createdAt,
+          createdAtServer: serverTimestamp()
+        });
         return orderDoc;
       } catch (err) {
-        console.error("Firestore createOrder error:", err);
+        throw new Error(formatAuthError(err) || "Could not save the order to Firestore.");
       }
     }
 
@@ -348,19 +354,9 @@ export class DatabaseService {
       try {
         const colRef = collection(db, "orders");
         const snap = await getDocs(colRef);
-        if (!snap.empty) {
-          const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-          list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-          return list;
-        } else {
-          // If Firestore orders collection is empty, seed demo customer orders to Firestore
-          console.log("Firestore orders empty. Seeding initial customer orders...");
-          const demoOrders = getLocalOrders();
-          for (const order of demoOrders) {
-            await setDoc(doc(db, "orders", order.id), order);
-          }
-          return demoOrders;
-        }
+        const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        list.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        return list;
       } catch (err) {
         console.warn("Firestore getOrders warning, using local dataset fallback:", err.message);
         return getLocalOrders();
@@ -369,10 +365,29 @@ export class DatabaseService {
     return getLocalOrders();
   }
 
-  // Fetch orders for a specific user (Customer "My Orders")
   async getOrdersByUser(userId, email = null) {
+    if (isFirebaseLive && db && (userId || email)) {
+      try {
+        const byId = new Map();
+        if (userId) {
+          const snap = await getDocs(query(collection(db, "orders"), where("userId", "==", userId)));
+          snap.docs.forEach((d) => byId.set(d.id, { id: d.id, ...d.data() }));
+        }
+        if (email) {
+          const snap = await getDocs(query(collection(db, "orders"), where("customerEmail", "==", email)));
+          snap.docs.forEach((d) => byId.set(d.id, { id: d.id, ...d.data() }));
+        }
+        return [...byId.values()].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      } catch (err) {
+        console.warn("Firestore getOrdersByUser warning:", err.message);
+      }
+    }
+
     const all = await this.getOrders();
-    return all.filter(o => (userId && o.userId === userId) || (email && o.customerEmail?.toLowerCase() === email.toLowerCase()));
+    return all.filter((o) =>
+      (userId && o.userId === userId) ||
+      (email && o.customerEmail?.toLowerCase() === email.toLowerCase())
+    );
   }
 
   // Update order status (Pending, Processing, Shipped, Delivered, Cancelled)
@@ -383,7 +398,7 @@ export class DatabaseService {
         await updateDoc(docRef, { status: newStatus });
         return true;
       } catch (err) {
-        console.error("Firestore updateOrderStatus error:", err);
+        throw new Error(formatAuthError(err) || "Could not update order status in Firestore.");
       }
     }
 
@@ -413,15 +428,7 @@ export class DatabaseService {
     if (isFirebaseLive && db) {
       try {
         const snap = await getDocs(collection(db, "users"));
-        if (!snap.empty) {
-          return snap.docs.map(d => ({ uid: d.id, ...d.data() }));
-        } else {
-          // Auto-seed default users to Firestore
-          for (const u of defaultLocalUsers) {
-            await setDoc(doc(db, "users", u.uid), u);
-          }
-          return defaultLocalUsers;
-        }
+        return snap.docs.map(d => ({ uid: d.id, ...d.data() }));
       } catch (err) {
         console.warn("Firestore getUsers warning, using local dataset fallback:", err.message);
       }
@@ -459,8 +466,40 @@ export class DatabaseService {
       totalOrders: orders.length,
       pendingOrders: pendingOrdersCount,
       totalRevenue: totalRevenue.toFixed(2),
-      totalCustomers: users.length > 0 ? users.length : 12
+      totalCustomers: users.filter((u) => u.role !== "admin").length || users.length
     };
+  }
+
+  async seedCategories() {
+    if (!(isFirebaseLive && db)) return true;
+    const batch = writeBatch(db);
+    PRODUCT_CATEGORIES.forEach((name) => {
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      batch.set(doc(db, "categories", slug), {
+        name,
+        slug,
+        createdAt: new Date().toISOString()
+      }, { merge: true });
+    });
+    await batch.commit();
+    return true;
+  }
+
+  async getCategories() {
+    if (isFirebaseLive && db) {
+      try {
+        const snap = await getDocs(collection(db, "categories"));
+        if (!snap.empty) {
+          return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        }
+      } catch (err) {
+        console.warn("Firestore getCategories warning:", err.message);
+      }
+    }
+    return PRODUCT_CATEGORIES.map((name) => ({
+      id: name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      name
+    }));
   }
 }
 

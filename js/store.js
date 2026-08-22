@@ -112,16 +112,7 @@ class StoreApp {
         });
       }
     } else {
-      authBtnContainer.innerHTML = `
-        <button id="btn-open-login" class="nav-btn">
-          <i class="fa-regular fa-user"></i>
-          <span class="nav-btn-label">Sign In</span>
-        </button>
-      `;
-
-      document.getElementById("btn-open-login")?.addEventListener("click", () => {
-        this.openAuthModal("login");
-      });
+      authBtnContainer.innerHTML = "";
     }
   }
 

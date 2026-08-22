@@ -1489,35 +1489,6 @@ img {
   border: 0;
 }
 
-.announce-bar {
-  background: #0f172a;
-  color: #e2e8f0;
-  font-size: 0.78rem;
-  font-weight: 600;
-}
-
-.announce-bar-inner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  min-height: 34px;
-  flex-wrap: wrap;
-  padding: 0.4rem 1rem;
-}
-
-.announce-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #818cf8;
-}
-
-.announce-bar i {
-  color: #818cf8;
-  margin-right: 0.3rem;
-}
-
 .hero-card-copy {
   font-size: 0.85rem;
   color: #cbd5e1;
@@ -1932,11 +1903,6 @@ img {
   .form-grid-3,
   .newsletter-form {
     grid-template-columns: 1fr;
-  }
-
-  .announce-dot,
-  .announce-bar span:nth-child(n+3) {
-    display: none;
   }
 
   .newsletter-form {

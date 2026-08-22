@@ -44,6 +44,11 @@ class StoreApp {
     const authBtnContainer = document.getElementById("nav-auth-container");
     if (!authBtnContainer) return;
 
+    if (this.currentUser?.role === "admin") {
+      authBtnContainer.innerHTML = "";
+      return;
+    }
+
     if (this.currentUser) {
       const initials = (this.currentUser.name || "User")
         .split(" ")

@@ -6,10 +6,12 @@ class ToastNotification {
   }
 
   init() {
+    if (typeof document === 'undefined') return;
     if (document.getElementById('toast-container')) {
       this.container = document.getElementById('toast-container');
       return;
     }
+    if (!document.body) return;
     const container = document.createElement('div');
     container.id = 'toast-container';
     container.className = 'toast-container';
@@ -19,6 +21,7 @@ class ToastNotification {
 
   show(message, type = 'info', duration = 3500) {
     this.init();
+    if (!this.container) return;
 
     const toast = document.createElement('div');
     toast.className = `toast-item toast-${type}`;

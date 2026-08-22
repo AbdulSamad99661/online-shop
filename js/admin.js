@@ -446,7 +446,7 @@ class AdminDashboard {
         </div>
         <span class="status-badge status-${String(order.status || "pending").toLowerCase()}">${escapeHtml(order.status)}</span>
       </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; background:var(--admin-bg); padding:1rem; border-radius:8px; margin-bottom:1.5rem; font-size:0.88rem;">
+      <div class="order-details-grid">
         <div>
           <h4 style="font-weight:700; margin-bottom:0.4rem; color:var(--admin-primary);">Customer Info</h4>
           <p><strong>Name:</strong> ${escapeHtml(order.customerName)}</p>
@@ -512,6 +512,11 @@ class AdminDashboard {
   }
 
   bindSidebarTabs() {
+    const closeMobileSidebar = () => {
+      document.getElementById("admin-sidebar")?.classList.remove("mobile-open");
+      document.getElementById("admin-sidebar-overlay")?.classList.remove("active");
+    };
+
     document.querySelectorAll(".sidebar-link[data-tab]").forEach((link) => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
@@ -531,12 +536,17 @@ class AdminDashboard {
         const title = document.getElementById("admin-header-title");
         if (title) title.textContent = titleMap[targetTab] || "Admin Dashboard";
         history.replaceState(null, "", `#${targetTab}`);
-        document.getElementById("admin-sidebar")?.classList.remove("mobile-open");
+        closeMobileSidebar();
       });
     });
 
     document.getElementById("btn-toggle-sidebar")?.addEventListener("click", () => {
       document.getElementById("admin-sidebar")?.classList.toggle("mobile-open");
+      document.getElementById("admin-sidebar-overlay")?.classList.toggle("active");
+    });
+    document.getElementById("admin-sidebar-overlay")?.addEventListener("click", closeMobileSidebar);
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 992) closeMobileSidebar();
     });
 
     document.getElementById("btn-admin-logout")?.addEventListener("click", async () => {

@@ -122,7 +122,7 @@ class StoreApp {
       authBtnContainer.innerHTML = `
         <button id="btn-open-login" class="nav-btn">
           <i class="fa-regular fa-user"></i>
-          <span>Sign In / Register</span>
+          <span class="nav-btn-label">Sign In</span>
         </button>
       `;
 
@@ -425,28 +425,41 @@ class StoreApp {
     // Search Inputs (Navbar and Header)
     const navSearch = document.getElementById("nav-search-input");
     const mainSearch = document.getElementById("main-search-input");
+    const mobileSearch = document.getElementById("mobile-search-input");
+    const mobileToggle = document.getElementById("btn-mobile-nav");
+    const mobileDrawer = document.getElementById("mobile-nav-drawer");
+
+    const syncSearchFields = (value, source) => {
+      if (navSearch && source !== navSearch) navSearch.value = value;
+      if (mainSearch && source !== mainSearch) mainSearch.value = value;
+      if (mobileSearch && source !== mobileSearch) mobileSearch.value = value;
+    };
 
     const handleSearch = debounce((e) => {
       this.searchQuery = e.target.value;
-      if (navSearch && e.target !== navSearch) navSearch.value = this.searchQuery;
-      if (mainSearch && e.target !== mainSearch) mainSearch.value = this.searchQuery;
+      syncSearchFields(this.searchQuery, e.target);
       this.renderProducts();
       document.getElementById("products-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 250);
 
     navSearch?.addEventListener("input", handleSearch);
     mainSearch?.addEventListener("input", handleSearch);
+    mobileSearch?.addEventListener("input", handleSearch);
 
-    document.getElementById("btn-mobile-nav")?.addEventListener("click", () => {
-      document.getElementById("mobile-nav-drawer")?.classList.toggle("open");
+    const setMobileMenu = (open) => {
+      mobileDrawer?.classList.toggle("open", open);
+      mobileToggle?.setAttribute("aria-expanded", open ? "true" : "false");
+      document.body.classList.toggle("mobile-menu-open", open);
+    };
+
+    mobileToggle?.addEventListener("click", () => {
+      setMobileMenu(!mobileDrawer?.classList.contains("open"));
     });
-    document.getElementById("mobile-nav-drawer")?.addEventListener("click", (e) => {
-      if (e.target.closest("a,button")) {
-        document.getElementById("mobile-nav-drawer")?.classList.remove("open");
-      }
+    mobileDrawer?.addEventListener("click", (e) => {
+      if (e.target.closest("a")) setMobileMenu(false);
     });
-    document.getElementById("mobile-search-focus")?.addEventListener("click", () => {
-      navSearch?.focus();
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 1100) setMobileMenu(false);
     });
 
     document.querySelectorAll("[data-footer-category]").forEach((link) => {

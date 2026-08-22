@@ -22,6 +22,35 @@ body.admin-body {
   overflow-x: hidden;
 }
 
+#admin-root-content {
+  width: 100%;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+.admin-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 999;
+}
+
+.admin-sidebar-overlay.active {
+  display: block;
+}
+
+.order-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  background: var(--admin-bg);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.88rem;
+}
+
 /* Sidebar */
 .admin-sidebar {
   width: var(--admin-sidebar-w);
@@ -540,22 +569,121 @@ body.admin-body {
 
 @media (max-width: 1100px) {
   .firebase-setup-grid,
-  .fb-field-grid {
+  .fb-field-grid,
+  .form-grid-3 {
     grid-template-columns: 1fr;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-content {
+    padding: 1.25rem;
+  }
+
+  .admin-header {
+    padding: 0 1.15rem;
   }
 }
 
 @media (max-width: 992px) {
   .admin-sidebar {
     transform: translateX(-100%);
+    box-shadow: 16px 0 40px rgba(15, 23, 42, 0.25);
   }
+
   .admin-sidebar.mobile-open {
     transform: translateX(0);
   }
+
   .admin-main {
     margin-left: 0;
+    width: 100%;
   }
+
   .mobile-sidebar-toggle {
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+  }
+
+  .admin-page-title {
+    font-size: 1.05rem;
+  }
+
+  .panel-actions {
+    width: 100%;
+  }
+
+  .admin-search-input,
+  .panel-actions .control-select,
+  .form-control {
+    font-size: 16px;
+  }
+
+  .admin-search-input,
+  .panel-actions .control-select {
+    flex: 1 1 160px;
+  }
+}
+
+@media (max-width: 768px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .kpi-value {
+    font-size: 1.4rem;
+  }
+
+  .admin-content {
+    padding: 0.9rem;
+  }
+
+  .admin-header {
+    padding: 0 0.85rem;
+  }
+
+  .admin-user-tag span {
+    display: none;
+  }
+
+  .panel-header,
+  .firebase-setup-body {
+    padding: 1rem;
+  }
+
+  .admin-table {
+    min-width: 720px;
+  }
+
+  .fb-action-row .btn-admin-primary,
+  .fb-action-row .btn-admin-seed,
+  .fb-action-row .nav-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .order-details-grid,
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content.modal-lg {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-page-title {
+    font-size: 0.95rem;
+  }
+
+  .kpi-card {
+    padding: 1.1rem;
   }
 }
